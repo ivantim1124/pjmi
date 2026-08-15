@@ -1,4 +1,4 @@
-# pjmi／鎮高機研
+# PJMI／鎮高機研
 
 Astro 靜態社團網站，使用 GitHub Actions 部署至 GitHub Pages。
 

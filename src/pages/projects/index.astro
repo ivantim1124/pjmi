@@ -4,7 +4,7 @@ import ProjectCard from '../../components/ProjectCard.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import { projects } from '../../data/site';
 ---
-<BaseLayout title="作品／pjmi 鎮高機研">
-  <section class="page-hero container"><div data-reveal><p class="eyebrow">PROJECTS / WORKBENCH</p><h1>讓想法留下<br /><span>可以被看見的形狀。</span></h1></div><p class="page-hero-note" data-reveal>從一個小實驗到完整作品，這裡會整理 pjmi 的製作過程、技術選擇與下一步。</p></section>
+<BaseLayout title="作品／PJMI 鎮高機研">
+  <section class="page-hero container"><div data-reveal><p class="eyebrow">PROJECTS / WORKBENCH</p><h1>讓想法留下 <span>可以被看見的形狀。</span></h1></div><p class="page-hero-note" data-reveal>從一個小實驗到完整作品，這裡會整理 PJMI 的製作過程、技術選擇與下一步。</p></section>
   <section class="section container"><SectionHeading eyebrow="PROJECT INDEX" title="每個作品都從一個問題開始。" description="目前先用可替換資料建立版型；正式內容可以補上作品照片、GitHub、Demo 與技術棧。" /><div class="project-grid project-grid--large">{projects.map((project) => <ProjectCard project={project} />)}</div></section>
 </BaseLayout>
