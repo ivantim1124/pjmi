@@ -1,0 +1,30 @@
+---
+import { siteConfig } from '../data/site';
+
+const currentPath = Astro.url.pathname;
+const links = [
+  { href: '/about/', label: '關於' },
+  { href: '/members/', label: '社員' },
+  { href: '/projects/', label: '作品' },
+  { href: '/activities/', label: '活動' },
+];
+---
+<header class="site-header">
+  <div class="header-shell">
+    <a class="brand-lockup" href="/" aria-label={`${siteConfig.name} 首頁`}>
+      <span class="brand-mark">{siteConfig.name}</span>
+      <span class="brand-name">{siteConfig.displayName}</span>
+    </a>
+    <nav class="desktop-nav" aria-label="主要導覽">
+      {links.map((link) => <a class:list={["nav-link", currentPath.startsWith(link.href) && "is-current"]} href={link.href} aria-current={currentPath.startsWith(link.href) ? 'page' : undefined}>{link.label}</a>)}
+      <a class="nav-cta" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">招生報名 <span aria-hidden="true">↗</span></a>
+    </nav>
+    <details class="mobile-nav">
+      <summary aria-label="開啟導覽選單"><span></span><span></span></summary>
+      <div class="mobile-nav-panel">
+        {links.map((link) => <a class:list={["mobile-nav-link", currentPath.startsWith(link.href) && "is-current"]} href={link.href} aria-current={currentPath.startsWith(link.href) ? 'page' : undefined}>{link.label}</a>)}
+        <a class="mobile-nav-link mobile-nav-link--accent" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">招生報名 <span aria-hidden="true">↗</span></a>
+      </div>
+    </details>
+  </div>
+</header>

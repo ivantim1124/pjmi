@@ -1,0 +1,61 @@
+/* Hallmark · genre: playful · macrostructure: Marquee Hero · theme: Hum · nav: N1b · footer: Ft8 */
+:root {
+  --color-paper: oklch(97% 0.012 88);
+  --color-paper-2: oklch(94% 0.018 88);
+  --color-paper-3: oklch(90% 0.026 88);
+  --color-ink: oklch(24% 0.045 258);
+  --color-ink-2: oklch(34% 0.04 258);
+  --color-muted: oklch(48% 0.035 258);
+  --color-rule: oklch(76% 0.025 88);
+  --color-rule-strong: oklch(58% 0.04 258);
+  --color-cyan: oklch(75% 0.13 208);
+  --color-lime: oklch(87% 0.16 102);
+  --color-coral: oklch(72% 0.14 32);
+  --color-blue: oklch(61% 0.16 258);
+  --color-accent: var(--color-cyan);
+  --color-accent-ink: oklch(24% 0.045 258);
+  --color-focus: oklch(57% 0.16 258);
+  --color-error: oklch(54% 0.17 25);
+  --color-success: oklch(47% 0.13 150);
+  --color-dark-surface: oklch(22% 0.045 258);
+  --color-dark-ink: oklch(96% 0.012 88);
+
+  --font-display: "Space Grotesk", "Noto Sans TC", sans-serif;
+  --font-body: "Noto Sans TC", "Space Grotesk", sans-serif;
+  --font-mono: "Space Mono", "SFMono-Regular", monospace;
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --space-5xl: 8rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.953rem;
+  --text-2xl: 2.441rem;
+  --text-3xl: 3.052rem;
+  --text-display: clamp(3.25rem, 10vw, 7rem);
+  --text-display-s: clamp(2.75rem, 8vw, 5.25rem);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 600ms;
+  --rule-thin: 1px;
+}
