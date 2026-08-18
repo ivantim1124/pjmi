@@ -3,4 +3,4 @@ import type { Activity } from '../data/site';
 interface Props { activity: Activity; }
 const { activity } = Astro.props;
 ---
-<article class="activity-row" data-reveal><time>{activity.date}</time><div class="activity-type">{activity.type}</div><div class="activity-content"><h3>{activity.title}</h3><p>{activity.summary}</p></div><span class="activity-arrow" aria-hidden="true">↗</span></article>
+<article class="activity-row" data-reveal><time>{activity.date}</time><div class="activity-type">{activity.type}</div><div class="activity-content"><h3>{activity.title}</h3></div><span class="activity-arrow" aria-hidden="true">↗</span></article>

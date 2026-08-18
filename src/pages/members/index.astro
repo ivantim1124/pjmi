@@ -4,6 +4,6 @@ import MemberCard from '../../components/MemberCard.astro';
 import { members } from '../../data/site';
 ---
 <BaseLayout title="社員／PJMI 鎮高機研">
-  <section class="page-hero page-hero--catalogue container"><div data-reveal><p class="eyebrow">MEMBERS / INDEX</p><h1>正在一起做事的人。</h1></div><p class="page-hero-note" data-reveal>社員資料會持續更新。這一版先把索引與欄位準備好，等你提供真實名單後就能直接替換。</p></section>
+  <section class="page-hero page-hero--single page-hero--catalogue container"><div data-reveal><p class="eyebrow">MEMBERS / INDEX</p><h1>正在一起做事的人。</h1></div></section>
   <section class="section container"><div class="catalogue-meta"><span>{members.length} entries / content pending</span><span>鎮高機研社員索引</span></div><div class="member-catalogue-grid">{members.map((member) => <MemberCard member={member} />)}</div></section>
 </BaseLayout>

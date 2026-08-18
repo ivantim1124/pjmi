@@ -10,7 +10,6 @@ const { member } = Astro.props;
     <p class="member-grade">{member.grade}</p>
     <h3>{member.name}</h3>
     <p class="member-role">{member.role}</p>
-    <p class="member-bio">{member.bio}</p>
     <div class="tag-row">{member.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
   </div>
 </article>

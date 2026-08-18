@@ -5,5 +5,5 @@ const { project } = Astro.props;
 ---
 <article class:list={["project-card", `project-card--${project.accent}`]} data-reveal>
   <div class="project-visual" aria-hidden="true"><span class="project-visual-label">{project.status}</span><span class="project-visual-mark">{project.slug.replace('project-', '0')}</span></div>
-  <div class="project-card-body"><p class="eyebrow">{project.stack.join(' · ')}</p><h3>{project.title}</h3><p>{project.summary}</p><a class="text-link" href="/projects/">查看作品索引 <span aria-hidden="true">→</span></a></div>
+  <div class="project-card-body"><p class="eyebrow">{project.stack.join(' · ')}</p><h3>{project.title}</h3><a class="text-link" href="/projects/">查看作品索引 <span aria-hidden="true">→</span></a></div>
 </article>
