@@ -1,16 +1,26 @@
 ---
 import BoardLayout from '../layouts/BoardLayout.astro';
 ---
-<BoardLayout title="管理介面／PJMI 比賽看板" description="PJMI 比賽看板管理介面。">
+<BoardLayout title="管理介面／PJMI 比賽看板" description="">
   <section class="admin-hero">
     <div>
       <p class="eyebrow">ADMIN / CONTROL ROOM</p>
-      <h1>管理最近比賽，<span>把下一步排好。</span></h1>
+      <h1>管理最近比賽</h1>
     </div>
-    <p>此頁面應由 Cloudflare Access 保護。只有被允許的管理者帳號可以讀取或修改資料。</p>
   </section>
 
-  <section class="admin-shell" aria-labelledby="admin-form-title">
+  <section class="login-panel" id="login-panel" aria-labelledby="login-title">
+    <div>
+      <p class="eyebrow">PASSWORD / LOGIN</p>
+      <h2 id="login-title">管理者登入</h2>
+    </div>
+    <form id="login-form">
+      <label>管理密碼<input id="admin-password" type="password" autocomplete="current-password" required /></label>
+      <div class="form-actions"><button class="board-button board-button--primary" type="submit">登入管理介面 <span aria-hidden="true">→</span></button><span id="login-message" role="status"></span></div>
+    </form>
+  </section>
+
+  <section class="admin-shell is-hidden" id="admin-shell" aria-labelledby="admin-form-title">
     <div class="admin-form-card">
       <div class="section-intro section-intro--compact">
         <div>
@@ -30,7 +40,6 @@ import BoardLayout from '../layouts/BoardLayout.astro';
           <label>日期／年份<input id="event-date" name="eventDate" maxlength="40" placeholder="例如：2026-09-20 或 2026" /></label>
           <label>地點<input id="location" name="location" maxlength="80" placeholder="例如：桃園／線上" /></label>
         </div>
-        <label>活動說明<textarea id="description" name="description" rows="4" maxlength="500" placeholder="簡單寫下比賽內容、準備方向或成果。"></textarea></label>
         <label>活動連結（選填）<input id="link" name="link" type="url" maxlength="500" placeholder="https://…" /></label>
         <label class="checkbox-label"><input id="featured" name="featured" type="checkbox" /> 標記為看板重點</label>
         <div class="form-actions"><button class="board-button board-button--primary" type="submit" id="submit-button">新增比賽 <span aria-hidden="true">→</span></button><span id="form-message" role="status"></span></div>
@@ -43,7 +52,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
           <p class="eyebrow">MANAGE / BOARD</p>
           <h2>已建立項目</h2>
         </div>
-        <span class="record-count" id="record-count">0 筆</span>
+        <div class="admin-list-actions"><span class="record-count" id="record-count">0 筆</span><button class="text-button" id="logout-button" type="button">登出</button></div>
       </div>
       <div class="admin-list" id="admin-list" aria-live="polite"><div class="board-loading">正在讀取管理資料……</div></div>
     </div>
@@ -57,16 +66,21 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       eventDate: string;
       location: string;
       status: 'upcoming' | 'completed' | 'archived';
-      description: string;
       link: string;
       featured: boolean;
     };
 
+    const loginPanel = document.querySelector<HTMLElement>('#login-panel');
+    const loginForm = document.querySelector<HTMLFormElement>('#login-form');
+    const password = document.querySelector<HTMLInputElement>('#admin-password');
+    const loginMessage = document.querySelector<HTMLElement>('#login-message');
+    const shell = document.querySelector<HTMLElement>('#admin-shell');
     const form = document.querySelector<HTMLFormElement>('#competition-form');
     const list = document.querySelector<HTMLElement>('#admin-list');
     const count = document.querySelector<HTMLElement>('#record-count');
     const message = document.querySelector<HTMLElement>('#form-message');
     const cancel = document.querySelector<HTMLButtonElement>('#cancel-edit');
+    const logout = document.querySelector<HTMLButtonElement>('#logout-button');
     const submit = document.querySelector<HTMLButtonElement>('#submit-button');
     const idInput = document.querySelector<HTMLInputElement>('#competition-id');
     const fields = {
@@ -75,7 +89,6 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       status: document.querySelector<HTMLSelectElement>('#status'),
       eventDate: document.querySelector<HTMLInputElement>('#event-date'),
       location: document.querySelector<HTMLInputElement>('#location'),
-      description: document.querySelector<HTMLTextAreaElement>('#description'),
       link: document.querySelector<HTMLInputElement>('#link'),
       featured: document.querySelector<HTMLInputElement>('#featured'),
     };
@@ -87,10 +100,27 @@ import BoardLayout from '../layouts/BoardLayout.astro';
 
     const statusLabel = (status: Competition['status']) => ({ upcoming: '即將開始', completed: '已完成', archived: '紀錄保存' })[status];
 
+    const setLoginMessage = (text: string, kind = '') => {
+      if (!loginMessage) return;
+      loginMessage.textContent = text;
+      loginMessage.className = kind;
+    };
+
     const setMessage = (text: string, kind = '') => {
       if (!message) return;
       message.textContent = text;
       message.className = kind;
+    };
+
+    const showLogin = () => {
+      loginPanel?.classList.remove('is-hidden');
+      shell?.classList.add('is-hidden');
+      password?.focus();
+    };
+
+    const showDashboard = () => {
+      loginPanel?.classList.add('is-hidden');
+      shell?.classList.remove('is-hidden');
     };
 
     const render = () => {
@@ -101,20 +131,24 @@ import BoardLayout from '../layouts/BoardLayout.astro';
           <div class="admin-record-copy"><div class="admin-record-meta"><span>${escapeHtml(item.category || '比賽')}</span><span>${escapeHtml(statusLabel(item.status))}</span></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.eventDate || '日期待補')}／${escapeHtml(item.location || '地點待補')}</p></div>
           <div class="admin-record-actions"><button class="text-button" type="button" data-edit="${escapeHtml(item.id)}">編輯</button><button class="text-button text-button--danger" type="button" data-delete="${escapeHtml(item.id)}">刪除</button></div>
         </article>
-      `).join('') : '<div class="board-empty"><strong>尚未建立比賽。</strong><span>使用左側表單新增第一筆資料。</span></div>';
+      `).join('') : '<div class="board-empty"><strong>尚未建立比賽</strong></div>';
     };
 
-    const load = async () => {
+    async function load() {
       try {
-        const response = await fetch('/api/admin/competitions');
-        if (response.status === 401 || response.status === 403) throw new Error('請先使用管理者帳號登入 Cloudflare Access。');
+        const response = await fetch('/api/admin/competitions', { credentials: 'same-origin' });
+        if (response.status === 401 || response.status === 403) {
+          showLogin();
+          setLoginMessage('請輸入管理密碼。', 'message-error');
+          return;
+        }
         if (!response.ok) throw new Error('管理 API 尚未設定完成。');
         competitions = await response.json() as Competition[];
         render();
       } catch (error) {
-        if (list) list.innerHTML = `<div class="board-empty board-empty--error"><strong>無法讀取管理資料。</strong><span>${escapeHtml(error instanceof Error ? error.message : '請稍後再試。')}</span></div>`;
+        if (list) list.innerHTML = `<div class="board-empty board-empty--error"><strong>無法讀取管理資料</strong><span>${escapeHtml(error instanceof Error ? error.message : '請稍後再試。')}</span></div>`;
       }
-    };
+    }
 
     const resetForm = () => {
       form?.reset();
@@ -133,7 +167,6 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       if (fields.status) fields.status.value = item.status;
       if (fields.eventDate) fields.eventDate.value = item.eventDate;
       if (fields.location) fields.location.value = item.location;
-      if (fields.description) fields.description.value = item.description;
       if (fields.link) fields.link.value = item.link;
       if (fields.featured) fields.featured.checked = item.featured;
       if (submit) submit.innerHTML = '儲存修改 <span aria-hidden="true">→</span>';
@@ -141,6 +174,25 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       cancel?.classList.remove('is-hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    loginForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setLoginMessage('登入中……');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ password: password?.value || '' }),
+      });
+      if (!response.ok) {
+        setLoginMessage(response.status === 503 ? '尚未設定管理密碼。' : '密碼錯誤。', 'message-error');
+        return;
+      }
+      if (password) password.value = '';
+      setLoginMessage('');
+      showDashboard();
+      await load();
+    });
 
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -150,7 +202,6 @@ import BoardLayout from '../layouts/BoardLayout.astro';
         status: fields.status?.value || 'upcoming',
         eventDate: fields.eventDate?.value.trim() || '',
         location: fields.location?.value.trim() || '',
-        description: fields.description?.value.trim() || '',
         link: fields.link?.value.trim() || '',
         featured: fields.featured?.checked || false,
       };
@@ -159,6 +210,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       const response = await fetch(id ? `/api/admin/competitions/${encodeURIComponent(id)}` : '/api/admin/competitions', {
         method: id ? 'PUT' : 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
@@ -171,6 +223,12 @@ import BoardLayout from '../layouts/BoardLayout.astro';
     });
 
     cancel?.addEventListener('click', resetForm);
+    logout?.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      showLogin();
+      setLoginMessage('已登出。', 'message-success');
+    });
+
     list?.addEventListener('click', async (event) => {
       const target = event.target as HTMLElement;
       const editId = target.closest<HTMLButtonElement>('[data-edit]')?.dataset.edit;
@@ -180,7 +238,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
         if (item) beginEdit(item);
       }
       if (deleteId && window.confirm('確定要刪除這筆比賽資料嗎？')) {
-        const response = await fetch(`/api/admin/competitions/${encodeURIComponent(deleteId)}`, { method: 'DELETE' });
+        const response = await fetch(`/api/admin/competitions/${encodeURIComponent(deleteId)}`, { method: 'DELETE', credentials: 'same-origin' });
         if (response.ok) {
           competitions = competitions.filter((competition) => competition.id !== deleteId);
           render();
@@ -191,6 +249,17 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       }
     });
 
-    load();
+    const checkSession = async () => {
+      const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+      const result = await response.json() as { authenticated?: boolean };
+      if (result.authenticated) {
+        showDashboard();
+        await load();
+      } else {
+        showLogin();
+      }
+    };
+
+    checkSession().catch(() => showLogin());
   </script>
 </BoardLayout>

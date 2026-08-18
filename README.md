@@ -33,4 +33,4 @@ npm run build
 
 ## 比賽看板
 
-`competition-board/` 是獨立的 Astro 子專案，包含公開比賽列表、Cloudflare Pages Functions API、D1 schema，以及受 Cloudflare Access 保護的管理介面。部署與 DNS／D1 操作請看 [`competition-board/README.md`](competition-board/README.md)。
+`competition-board/` 是獨立的 Astro 子專案，包含公開比賽列表、Cloudflare Pages Functions API、D1 schema，以及密碼登入的管理介面。部署與 DNS／D1 操作請看 [`competition-board/README.md`](competition-board/README.md)。

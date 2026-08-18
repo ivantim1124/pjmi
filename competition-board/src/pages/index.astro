@@ -9,7 +9,6 @@ const previewJson = JSON.stringify(previewCompetitions);
     <div class="board-hero-copy">
       <p class="eyebrow">PJMI / COMPETITION BOARD</p>
       <h1>最近比賽，<span>一起掌握。</span></h1>
-      <p class="board-lede">從報名、準備到完成，把每一個讓 PJMI 往前走的節點放在同一張看板上。</p>
       <div class="board-hero-meta">
         <span class="signal-dot"></span>
         <span>LIVE DATA / CLOUDFLARE D1</span>
@@ -29,7 +28,6 @@ const previewJson = JSON.stringify(previewCompetitions);
         <p class="eyebrow">CURRENT / NEXT</p>
         <h2 id="board-title">比賽與活動索引</h2>
       </div>
-      <p>公開頁面會即時讀取管理介面新增的資料。日期、地點與連結都可以在後台補上。</p>
     </div>
     <div class="filter-bar" role="group" aria-label="篩選比賽狀態">
       <button class="filter-button is-active" type="button" data-filter="all">全部</button>
@@ -44,7 +42,7 @@ const previewJson = JSON.stringify(previewCompetitions);
   <section class="board-callout">
     <div>
       <p class="eyebrow">READY / SET / BUILD</p>
-      <h2>想把下一場比賽放上來？</h2>
+      <h2>新增比賽</h2>
     </div>
     <a class="board-button board-button--dark" href="/admin/">開啟管理介面 <span aria-hidden="true">→</span></a>
   </section>
@@ -58,7 +56,6 @@ const previewJson = JSON.stringify(previewCompetitions);
       eventDate: string;
       location: string;
       status: 'upcoming' | 'completed' | 'archived';
-      description: string;
       link: string;
       featured: boolean;
     };
@@ -94,7 +91,6 @@ const previewJson = JSON.stringify(previewCompetitions);
             </div>
             <p class="card-category">${escapeHtml(item.category || '比賽')}</p>
             <h3>${escapeHtml(item.title)}</h3>
-            <p class="card-description">${escapeHtml(item.description || '尚未補上活動說明。')}</p>
             <dl class="card-details">
               <div><dt>日期</dt><dd>${escapeHtml(item.eventDate || '日期待補')}</dd></div>
               <div><dt>地點</dt><dd>${escapeHtml(item.location || '地點待補')}</dd></div>
@@ -102,7 +98,7 @@ const previewJson = JSON.stringify(previewCompetitions);
             ${item.link ? `<a class="card-link" href="${escapeHtml(item.link)}" target="_blank" rel="noreferrer">活動連結 <span aria-hidden="true">↗</span></a>` : ''}
           </article>
         `).join('')
-        : '<div class="board-empty"><strong>目前沒有符合條件的項目。</strong><span>請從管理介面新增下一場比賽。</span></div>';
+        : '<div class="board-empty"><strong>尚無公開比賽</strong></div>';
     };
 
     const load = async () => {

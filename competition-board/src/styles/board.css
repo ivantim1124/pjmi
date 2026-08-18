@@ -79,6 +79,8 @@ button, input, select, textarea { font: inherit; }
 
 .admin-hero { max-width: 1240px; margin: 0 auto; padding: 6rem 2rem 4rem; display: flex; align-items: end; justify-content: space-between; gap: 3rem; border-bottom: 1px solid var(--line); }
 .admin-hero > p { max-width: 340px; margin: 0; color: var(--muted); line-height: 1.8; }
+.login-panel { max-width: 760px; margin: 4rem auto 7rem; padding: 1.5rem; display: grid; grid-template-columns: .8fr 1.2fr; gap: 2rem; border: 1px solid var(--ink); background: #fffdf7; }
+.login-panel h2 { margin: 0; font: 700 2rem/.95 'Space Grotesk', 'Noto Sans TC', sans-serif; letter-spacing: -.07em; }
 .admin-shell { max-width: 1240px; margin: 0 auto; padding: 4rem 2rem 7rem; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 1.5rem; align-items: start; }
 .admin-form-card, .admin-list-card { padding: 1.5rem; border: 1px solid var(--ink); background: #fffdf7; }
 .section-intro--compact { align-items: center; margin-bottom: 1.7rem; }
@@ -99,6 +101,7 @@ textarea { resize: vertical; }
 .message-success { color: #26734d !important; }
 .message-error { color: #b54032 !important; }
 .record-count { color: var(--muted); font: .72rem 'Space Mono', monospace; }
+.admin-list-actions { display: flex; align-items: center; gap: 1rem; }
 .admin-list { display: grid; gap: .7rem; }
 .admin-record { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--line); }
 .admin-record-copy { min-width: 0; }
@@ -120,6 +123,7 @@ textarea { resize: vertical; }
   .section-intro, .admin-hero, .board-callout { align-items: flex-start; flex-direction: column; }
   .competition-grid { grid-template-columns: 1fr 1fr; }
   .admin-shell { grid-template-columns: 1fr; padding-left: 1.25rem; padding-right: 1.25rem; }
+  .login-panel { margin-left: 1.25rem; margin-right: 1.25rem; grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .board-header { display: block; }

@@ -8,7 +8,7 @@ export const onRequestGet: PageFunction = async ({ env, request }) => {
 
   try {
     const result = await env.DB.prepare(
-      `SELECT id, title, category, event_date, location, status, description, link, featured, created_at, updated_at
+      `SELECT id, title, category, event_date, location, status, link, featured, created_at, updated_at
        FROM competitions
        ORDER BY featured DESC, CASE WHEN status = 'upcoming' THEN 0 ELSE 1 END, event_date ASC, created_at DESC
        LIMIT ?`,
