@@ -37,7 +37,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
           <label>狀態<select id="status" name="status"><option value="upcoming">即將開始</option><option value="completed">已完成</option><option value="archived">紀錄保存</option></select></label>
         </div>
         <div class="form-grid">
-          <label>日期／年份<input id="event-date" name="eventDate" maxlength="40" placeholder="例如：2026-09-20 或 2026" /></label>
+          <label>日期／時間說明<textarea id="event-date" name="eventDate" rows="4" maxlength="500" placeholder="例如：報名 2026-09-01～09-15&#10;初賽 2026-09-20&#10;決賽 2026-10-04"></textarea></label>
           <label>地點<input id="location" name="location" maxlength="80" placeholder="例如：桃園／線上" /></label>
         </div>
         <label>活動連結（選填）<input id="link" name="link" type="url" maxlength="500" placeholder="https://…" /></label>
@@ -87,7 +87,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       title: document.querySelector<HTMLInputElement>('#title'),
       category: document.querySelector<HTMLInputElement>('#category'),
       status: document.querySelector<HTMLSelectElement>('#status'),
-      eventDate: document.querySelector<HTMLInputElement>('#event-date'),
+      eventDate: document.querySelector<HTMLTextAreaElement>('#event-date'),
       location: document.querySelector<HTMLInputElement>('#location'),
       link: document.querySelector<HTMLInputElement>('#link'),
       featured: document.querySelector<HTMLInputElement>('#featured'),

@@ -64,7 +64,7 @@ button, input, select, textarea { font: inherit; }
 .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin: auto 0 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .card-details div { min-width: 0; }
 .card-details dt { color: var(--muted); font: .66rem 'Space Mono', monospace; }
-.card-details dd { margin: .35rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; font-weight: 700; }
+.card-details dd { margin: .35rem 0 0; overflow-wrap: anywhere; white-space: pre-line; font-size: .82rem; font-weight: 700; }
 .card-link { font-size: .82rem; font-weight: 800; text-underline-offset: .3rem; }
 .board-loading, .board-empty { grid-column: 1 / -1; padding: 3rem 1rem; border: 1px dashed var(--line); color: var(--muted); text-align: center; }
 .board-empty { display: flex; flex-direction: column; gap: .6rem; }
@@ -107,7 +107,7 @@ textarea { resize: vertical; }
 .admin-record-copy { min-width: 0; }
 .admin-record-meta { display: flex; gap: .7rem; color: var(--muted); font: .66rem 'Space Mono', monospace; }
 .admin-record h3 { margin: .45rem 0 .25rem; font-size: 1rem; letter-spacing: -.02em; }
-.admin-record p { margin: 0; color: var(--muted); font-size: .78rem; }
+.admin-record p { margin: 0; color: var(--muted); font-size: .78rem; white-space: pre-line; }
 .admin-record-actions { display: flex; gap: .8rem; flex: 0 0 auto; }
 .board-footer { max-width: 1240px; margin: 0 auto; padding: 1.4rem 2rem 2.5rem; display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); font: .7rem 'Space Mono', monospace; letter-spacing: .04em; }
 .board-empty--page { max-width: 800px; margin: 10rem auto; border: 0; align-items: center; }

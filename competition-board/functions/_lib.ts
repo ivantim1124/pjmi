@@ -122,7 +122,7 @@ export const parseCompetition = (body: Record<string, unknown>) => {
 
   const category = typeof body.category === 'string' ? body.category.trim().slice(0, 30) : '競賽';
   const status = typeof body.status === 'string' && allowedStatuses.has(body.status) ? body.status : 'upcoming';
-  const eventDate = typeof body.eventDate === 'string' ? body.eventDate.trim().slice(0, 40) : '';
+  const eventDate = typeof body.eventDate === 'string' ? body.eventDate.trim().slice(0, 500) : '';
   const location = typeof body.location === 'string' ? body.location.trim().slice(0, 80) : '';
   const link = typeof body.link === 'string' ? body.link.trim().slice(0, 500) : '';
   if (link) {
