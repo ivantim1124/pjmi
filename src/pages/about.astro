@@ -1,8 +1,31 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionHeading from '../components/SectionHeading.astro';
+import { siteConfig } from '../data/site';
 ---
 <BaseLayout title="關於／PJMI 鎮高機研">
-  <section class="page-hero page-hero--single container"><div data-reveal><p class="eyebrow">ABOUT PJMI</p><h1>把學習變成 <span>可以運作的事。</span></h1></div></section>
-  <section class="section container about-grid"><SectionHeading eyebrow="如果對這些有興趣" title="特殊選材、ＡＩ、資安、ＡＰＣＳ、資訊、程式" /><div class="about-prose"><p class="about-interest-welcome">歡迎加入</p></div></section>
+  <section class="about-hero container">
+    <div class="about-hero-heading" data-reveal>
+      <p class="eyebrow">ABOUT PJMI</p>
+      <h1>把學習變成 <span>可以運作的事。</span></h1>
+    </div>
+    <div class="about-hero-mark" data-reveal aria-label={`${siteConfig.name} ${siteConfig.displayName}`}>
+      <span class="about-hero-mark__top">{siteConfig.name}</span>
+      <span class="about-hero-mark__orbit about-hero-mark__orbit--one" aria-hidden="true"></span>
+      <span class="about-hero-mark__orbit about-hero-mark__orbit--two" aria-hidden="true"></span>
+      <strong>{siteConfig.displayName}</strong>
+      <span class="about-hero-mark__bottom">CURIOUS / BUILDING</span>
+    </div>
+  </section>
+
+  <section class="about-interest section container">
+    <div class="about-interest-heading" data-reveal>
+      <p class="eyebrow">如果對這些有興趣</p>
+      <h2>特殊選材、<br /><span>ＡＩ、資安、</span><br />ＡＰＣＳ、資訊、程式</h2>
+    </div>
+    <div class="about-interest-cta" data-reveal>
+      <span class="about-interest-index">01 / JOIN PJMI</span>
+      <p>歡迎加入</p>
+      <a class="button button--dark" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a>
+    </div>
+  </section>
 </BaseLayout>
