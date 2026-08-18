@@ -5,4 +5,4 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "pjmi-competitions"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "2d4ce390-882b-4f2f-a681-4abf4f090bc6"
