@@ -6,6 +6,8 @@ Astro 靜態社團網站，使用 GitHub Actions 部署至 GitHub Pages。
 
 比賽看板：<https://competitions.pjmi.dpdns.org>（Cloudflare Pages + D1 設定完成後啟用）
 
+若 Cloudflare Pages 沒有顯示 Root directory，請將比賽看板 Pages 專案的建置設定改為：Build command `cd competition-board && npm install && npm run build`，Build output directory `competition-board/dist`。
+
 ## 本機開發
 
 ```bash

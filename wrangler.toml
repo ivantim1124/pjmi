@@ -1,0 +1,8 @@
+name = "pjmi-competition-board"
+compatibility_date = "2026-08-18"
+pages_build_output_dir = "competition-board/dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pjmi-competitions"
+database_id = "2d4ce390-882b-4f2f-a681-4abf4f090bc6"
