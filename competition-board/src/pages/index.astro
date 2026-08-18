@@ -1,0 +1,130 @@
+---
+import BoardLayout from '../layouts/BoardLayout.astro';
+import { previewCompetitions } from '../data/competitions';
+
+const previewJson = JSON.stringify(previewCompetitions);
+---
+<BoardLayout>
+  <section class="board-hero">
+    <div class="board-hero-copy">
+      <p class="eyebrow">PJMI / COMPETITION BOARD</p>
+      <h1>最近比賽，<span>一起掌握。</span></h1>
+      <p class="board-lede">從報名、準備到完成，把每一個讓 PJMI 往前走的節點放在同一張看板上。</p>
+      <div class="board-hero-meta">
+        <span class="signal-dot"></span>
+        <span>LIVE DATA / CLOUDFLARE D1</span>
+      </div>
+    </div>
+    <div class="board-hero-orbit" aria-hidden="true">
+      <span class="orbit orbit--one"></span>
+      <span class="orbit orbit--two"></span>
+      <span class="orbit orbit--three"></span>
+      <span class="orbit-core">PJMI</span>
+    </div>
+  </section>
+
+  <section class="board-section" aria-labelledby="board-title">
+    <div class="section-intro">
+      <div>
+        <p class="eyebrow">CURRENT / NEXT</p>
+        <h2 id="board-title">比賽與活動索引</h2>
+      </div>
+      <p>公開頁面會即時讀取管理介面新增的資料。日期、地點與連結都可以在後台補上。</p>
+    </div>
+    <div class="filter-bar" role="group" aria-label="篩選比賽狀態">
+      <button class="filter-button is-active" type="button" data-filter="all">全部</button>
+      <button class="filter-button" type="button" data-filter="upcoming">即將開始</button>
+      <button class="filter-button" type="button" data-filter="completed">已完成</button>
+    </div>
+    <div class="competition-grid" id="competition-grid" aria-live="polite">
+      <div class="board-loading">正在連線到 PJMI 看板……</div>
+    </div>
+  </section>
+
+  <section class="board-callout">
+    <div>
+      <p class="eyebrow">READY / SET / BUILD</p>
+      <h2>想把下一場比賽放上來？</h2>
+    </div>
+    <a class="board-button board-button--dark" href="/admin/">開啟管理介面 <span aria-hidden="true">→</span></a>
+  </section>
+
+  <script type="application/json" id="preview-data" set:html={previewJson} is:inline></script>
+  <script>
+    type Competition = {
+      id: string;
+      title: string;
+      category: string;
+      eventDate: string;
+      location: string;
+      status: 'upcoming' | 'completed' | 'archived';
+      description: string;
+      link: string;
+      featured: boolean;
+    };
+
+    const grid = document.querySelector<HTMLElement>('#competition-grid');
+    const preview = JSON.parse(document.querySelector('#preview-data')?.textContent || '[]') as Competition[];
+    let competitions: Competition[] = [];
+    let activeFilter = 'all';
+
+    const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+    })[character] || character);
+
+    const statusLabel = (status: Competition['status']) => ({
+      upcoming: '即將開始',
+      completed: '已完成',
+      archived: '紀錄保存',
+    })[status];
+
+    const render = () => {
+      if (!grid) return;
+      const filtered = activeFilter === 'all' ? competitions : competitions.filter((item) => item.status === activeFilter);
+      grid.innerHTML = filtered.length
+        ? filtered.map((item, index) => `
+          <article class="competition-card ${item.featured ? 'competition-card--featured' : ''}" style="--card-index:${index}">
+            <div class="competition-card-top">
+              <span class="card-index">${String(index + 1).padStart(2, '0')}</span>
+              <span class="status-pill status-pill--${escapeHtml(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
+            </div>
+            <p class="card-category">${escapeHtml(item.category || '比賽')}</p>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p class="card-description">${escapeHtml(item.description || '尚未補上活動說明。')}</p>
+            <dl class="card-details">
+              <div><dt>日期</dt><dd>${escapeHtml(item.eventDate || '日期待補')}</dd></div>
+              <div><dt>地點</dt><dd>${escapeHtml(item.location || '地點待補')}</dd></div>
+            </dl>
+            ${item.link ? `<a class="card-link" href="${escapeHtml(item.link)}" target="_blank" rel="noreferrer">活動連結 <span aria-hidden="true">↗</span></a>` : ''}
+          </article>
+        `).join('')
+        : '<div class="board-empty"><strong>目前沒有符合條件的項目。</strong><span>請從管理介面新增下一場比賽。</span></div>';
+    };
+
+    const load = async () => {
+      try {
+        const response = await fetch('/api/competitions');
+        if (!response.ok) throw new Error('API unavailable');
+        competitions = await response.json() as Competition[];
+      } catch {
+        competitions = preview;
+      }
+      render();
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((button) => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter || 'all';
+        document.querySelectorAll('[data-filter]').forEach((item) => item.classList.remove('is-active'));
+        button.classList.add('is-active');
+        render();
+      });
+    });
+
+    load();
+  </script>
+</BoardLayout>

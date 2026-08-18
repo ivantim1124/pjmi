@@ -5,6 +5,7 @@ export const siteConfig = {
   recruitmentUrl:
     'https://script.google.com/macros/s/AKfycbwi2G1wPeCNcKmupVEWUI9cmxC3sBgdoqi2wd_JlVYJg8eWBWoeHcRPQSRWhPfagt84/exec',
   githubUrl: 'https://github.com/ivantim1124/pjmi',
+  competitionBoardUrl: 'https://competitions.pjmi.dpdns.org/',
 };
 
 export type Member = {

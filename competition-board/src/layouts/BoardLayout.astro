@@ -1,0 +1,48 @@
+---
+import '../styles/board.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = '比賽看板／PJMI 鎮高機研',
+  description = '整理 PJMI 最近的比賽、展覽與科學活動。',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competitions.pjmi.dpdns.org').toString();
+---
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="board-header">
+      <a class="board-brand" href="/" aria-label="PJMI 比賽看板首頁">
+        <span class="board-brand-mark">PJMI</span>
+        <span>鎮高機研／比賽看板</span>
+      </a>
+      <nav class="board-nav" aria-label="比賽看板導覽">
+        <a href="/">全部比賽</a>
+        <a href="/admin/">管理介面 <span aria-hidden="true">↗</span></a>
+        <a class="board-nav-home" href="https://pjmi.dpdns.org/">回到主站 <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="board-footer">
+      <span>PJMI／鎮高機研</span>
+      <span>MAKE THINGS MOVE</span>
+      <span>比賽看板</span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,196 @@
+---
+import BoardLayout from '../layouts/BoardLayout.astro';
+---
+<BoardLayout title="管理介面／PJMI 比賽看板" description="PJMI 比賽看板管理介面。">
+  <section class="admin-hero">
+    <div>
+      <p class="eyebrow">ADMIN / CONTROL ROOM</p>
+      <h1>管理最近比賽，<span>把下一步排好。</span></h1>
+    </div>
+    <p>此頁面應由 Cloudflare Access 保護。只有被允許的管理者帳號可以讀取或修改資料。</p>
+  </section>
+
+  <section class="admin-shell" aria-labelledby="admin-form-title">
+    <div class="admin-form-card">
+      <div class="section-intro section-intro--compact">
+        <div>
+          <p class="eyebrow">ADD / EDIT</p>
+          <h2 id="admin-form-title">新增比賽</h2>
+        </div>
+        <button class="text-button is-hidden" id="cancel-edit" type="button">取消編輯</button>
+      </div>
+      <form id="competition-form">
+        <input id="competition-id" type="hidden" />
+        <label>比賽名稱<input id="title" name="title" required maxlength="120" placeholder="例如：2026 工業機器人競賽" /></label>
+        <div class="form-grid">
+          <label>類型<input id="category" name="category" maxlength="30" placeholder="競賽／展覽／獎項" value="競賽" /></label>
+          <label>狀態<select id="status" name="status"><option value="upcoming">即將開始</option><option value="completed">已完成</option><option value="archived">紀錄保存</option></select></label>
+        </div>
+        <div class="form-grid">
+          <label>日期／年份<input id="event-date" name="eventDate" maxlength="40" placeholder="例如：2026-09-20 或 2026" /></label>
+          <label>地點<input id="location" name="location" maxlength="80" placeholder="例如：桃園／線上" /></label>
+        </div>
+        <label>活動說明<textarea id="description" name="description" rows="4" maxlength="500" placeholder="簡單寫下比賽內容、準備方向或成果。"></textarea></label>
+        <label>活動連結（選填）<input id="link" name="link" type="url" maxlength="500" placeholder="https://…" /></label>
+        <label class="checkbox-label"><input id="featured" name="featured" type="checkbox" /> 標記為看板重點</label>
+        <div class="form-actions"><button class="board-button board-button--primary" type="submit" id="submit-button">新增比賽 <span aria-hidden="true">→</span></button><span id="form-message" role="status"></span></div>
+      </form>
+    </div>
+
+    <div class="admin-list-card">
+      <div class="section-intro section-intro--compact">
+        <div>
+          <p class="eyebrow">MANAGE / BOARD</p>
+          <h2>已建立項目</h2>
+        </div>
+        <span class="record-count" id="record-count">0 筆</span>
+      </div>
+      <div class="admin-list" id="admin-list" aria-live="polite"><div class="board-loading">正在讀取管理資料……</div></div>
+    </div>
+  </section>
+
+  <script>
+    type Competition = {
+      id: string;
+      title: string;
+      category: string;
+      eventDate: string;
+      location: string;
+      status: 'upcoming' | 'completed' | 'archived';
+      description: string;
+      link: string;
+      featured: boolean;
+    };
+
+    const form = document.querySelector<HTMLFormElement>('#competition-form');
+    const list = document.querySelector<HTMLElement>('#admin-list');
+    const count = document.querySelector<HTMLElement>('#record-count');
+    const message = document.querySelector<HTMLElement>('#form-message');
+    const cancel = document.querySelector<HTMLButtonElement>('#cancel-edit');
+    const submit = document.querySelector<HTMLButtonElement>('#submit-button');
+    const idInput = document.querySelector<HTMLInputElement>('#competition-id');
+    const fields = {
+      title: document.querySelector<HTMLInputElement>('#title'),
+      category: document.querySelector<HTMLInputElement>('#category'),
+      status: document.querySelector<HTMLSelectElement>('#status'),
+      eventDate: document.querySelector<HTMLInputElement>('#event-date'),
+      location: document.querySelector<HTMLInputElement>('#location'),
+      description: document.querySelector<HTMLTextAreaElement>('#description'),
+      link: document.querySelector<HTMLInputElement>('#link'),
+      featured: document.querySelector<HTMLInputElement>('#featured'),
+    };
+    let competitions: Competition[] = [];
+
+    const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+    })[character] || character);
+
+    const statusLabel = (status: Competition['status']) => ({ upcoming: '即將開始', completed: '已完成', archived: '紀錄保存' })[status];
+
+    const setMessage = (text: string, kind = '') => {
+      if (!message) return;
+      message.textContent = text;
+      message.className = kind;
+    };
+
+    const render = () => {
+      if (!list || !count) return;
+      count.textContent = `${competitions.length} 筆`;
+      list.innerHTML = competitions.length ? competitions.map((item) => `
+        <article class="admin-record">
+          <div class="admin-record-copy"><div class="admin-record-meta"><span>${escapeHtml(item.category || '比賽')}</span><span>${escapeHtml(statusLabel(item.status))}</span></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.eventDate || '日期待補')}／${escapeHtml(item.location || '地點待補')}</p></div>
+          <div class="admin-record-actions"><button class="text-button" type="button" data-edit="${escapeHtml(item.id)}">編輯</button><button class="text-button text-button--danger" type="button" data-delete="${escapeHtml(item.id)}">刪除</button></div>
+        </article>
+      `).join('') : '<div class="board-empty"><strong>尚未建立比賽。</strong><span>使用左側表單新增第一筆資料。</span></div>';
+    };
+
+    const load = async () => {
+      try {
+        const response = await fetch('/api/admin/competitions');
+        if (response.status === 401 || response.status === 403) throw new Error('請先使用管理者帳號登入 Cloudflare Access。');
+        if (!response.ok) throw new Error('管理 API 尚未設定完成。');
+        competitions = await response.json() as Competition[];
+        render();
+      } catch (error) {
+        if (list) list.innerHTML = `<div class="board-empty board-empty--error"><strong>無法讀取管理資料。</strong><span>${escapeHtml(error instanceof Error ? error.message : '請稍後再試。')}</span></div>`;
+      }
+    };
+
+    const resetForm = () => {
+      form?.reset();
+      if (idInput) idInput.value = '';
+      if (fields.category) fields.category.value = '競賽';
+      if (fields.status) fields.status.value = 'upcoming';
+      if (submit) submit.innerHTML = '新增比賽 <span aria-hidden="true">→</span>';
+      document.querySelector('#admin-form-title')!.textContent = '新增比賽';
+      cancel?.classList.add('is-hidden');
+    };
+
+    const beginEdit = (item: Competition) => {
+      if (idInput) idInput.value = item.id;
+      if (fields.title) fields.title.value = item.title;
+      if (fields.category) fields.category.value = item.category;
+      if (fields.status) fields.status.value = item.status;
+      if (fields.eventDate) fields.eventDate.value = item.eventDate;
+      if (fields.location) fields.location.value = item.location;
+      if (fields.description) fields.description.value = item.description;
+      if (fields.link) fields.link.value = item.link;
+      if (fields.featured) fields.featured.checked = item.featured;
+      if (submit) submit.innerHTML = '儲存修改 <span aria-hidden="true">→</span>';
+      document.querySelector('#admin-form-title')!.textContent = '編輯比賽';
+      cancel?.classList.remove('is-hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const payload = {
+        title: fields.title?.value.trim() || '',
+        category: fields.category?.value.trim() || '競賽',
+        status: fields.status?.value || 'upcoming',
+        eventDate: fields.eventDate?.value.trim() || '',
+        location: fields.location?.value.trim() || '',
+        description: fields.description?.value.trim() || '',
+        link: fields.link?.value.trim() || '',
+        featured: fields.featured?.checked || false,
+      };
+      setMessage('儲存中……');
+      const id = idInput?.value;
+      const response = await fetch(id ? `/api/admin/competitions/${encodeURIComponent(id)}` : '/api/admin/competitions', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        setMessage(response.status === 401 || response.status === 403 ? '登入管理者帳號後才能儲存。' : '儲存失敗，請檢查欄位。', 'message-error');
+        return;
+      }
+      setMessage(id ? '修改完成。' : '新增完成。', 'message-success');
+      resetForm();
+      await load();
+    });
+
+    cancel?.addEventListener('click', resetForm);
+    list?.addEventListener('click', async (event) => {
+      const target = event.target as HTMLElement;
+      const editId = target.closest<HTMLButtonElement>('[data-edit]')?.dataset.edit;
+      const deleteId = target.closest<HTMLButtonElement>('[data-delete]')?.dataset.delete;
+      if (editId) {
+        const item = competitions.find((competition) => competition.id === editId);
+        if (item) beginEdit(item);
+      }
+      if (deleteId && window.confirm('確定要刪除這筆比賽資料嗎？')) {
+        const response = await fetch(`/api/admin/competitions/${encodeURIComponent(deleteId)}`, { method: 'DELETE' });
+        if (response.ok) {
+          competitions = competitions.filter((competition) => competition.id !== deleteId);
+          render();
+          setMessage('已刪除。', 'message-success');
+        } else {
+          setMessage('刪除失敗，請確認登入狀態。', 'message-error');
+        }
+      }
+    });
+
+    load();
+  </script>
+</BoardLayout>
