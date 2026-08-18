@@ -2,8 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import MemberCard from '../components/MemberCard.astro';
-import ActivityRow from '../components/ActivityRow.astro';
-import { activities, members, siteConfig } from '../data/site';
+import { members, siteConfig } from '../data/site';
 ---
 <BaseLayout>
   <section class="hero container">
@@ -17,8 +16,6 @@ import { activities, members, siteConfig } from '../data/site';
   </section>
 
   <section class="section section--dark"><div class="container"><SectionHeading eyebrow="社員索引" title="每個人都帶著一個正在成形的方向。" /><div class="member-preview-grid">{members.slice(0, 3).map((member) => <MemberCard member={member} />)}</div><a class="button button--light" href="/members/">查看全部社員 <span aria-hidden="true">→</span></a></div></section>
-
-  <section class="section section--tinted"><div class="container activity-split"><SectionHeading eyebrow="參與過的活動" title="一起做過的事，會變成下一次的起點。" /><div class="activity-list">{activities.slice(0, 2).map((activity) => <ActivityRow activity={activity} />)}<a class="text-link" href="/activities/">看完整活動紀錄 <span aria-hidden="true">→</span></a></div></div></section>
 
   <section class="join-banner container" data-reveal><div><h2>加入我們</h2></div><a class="button button--dark" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a></section>
 </BaseLayout>

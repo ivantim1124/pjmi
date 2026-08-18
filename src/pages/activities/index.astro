@@ -5,6 +5,5 @@ import SectionHeading from '../../components/SectionHeading.astro';
 import { activities } from '../../data/site';
 ---
 <BaseLayout title="活動／PJMI 鎮高機研">
-  <section class="page-hero page-hero--single container"><div data-reveal><p class="eyebrow">ACTIVITIES / LOG</p><h1>參與過的活動 <span>會變成下一次的起點。</span></h1></div></section>
   <section class="section container"><SectionHeading eyebrow="參與過的活動" title="把過程也算進成果裡。" /><div class="activity-log">{activities.map((activity) => <ActivityRow activity={activity} />)}</div></section>
 </BaseLayout>

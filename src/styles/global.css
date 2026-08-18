@@ -112,9 +112,6 @@ h1 span, h2 span { color: var(--color-blue); }
 .text-link:hover { color: var(--color-blue); }
 .section-end-link { margin-top: 2rem; }
 
-.activity-split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2rem, 8vw, 8rem); }
-.activity-split .section-heading { display: block; margin-bottom: 0; }
-.activity-split .section-heading h2 { margin-bottom: 1rem; }
 .activity-list, .activity-log { border-top: 1px solid var(--color-rule-strong); }
 .activity-row { min-width: 0; display: grid; grid-template-columns: 7rem 6rem minmax(0, 1fr) 2rem; gap: 1rem; align-items: start; padding-block: 1.3rem; border-bottom: 1px solid var(--color-rule); }
 .activity-row time, .activity-type { color: var(--color-muted); font-family: var(--font-mono); font-size: 0.7rem; }
@@ -181,10 +178,9 @@ h1 span, h2 span { color: var(--color-blue); }
 @media (max-width: 60rem) {
   .hero, .page-hero, .join-hero { grid-template-columns: 1fr; align-items: start; }
   .hero-system { max-width: 34rem; width: 100%; margin-inline: auto; }
-  .section-heading, .activity-split, .about-grid, .about-columns, .join-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .section-heading, .about-grid, .about-columns, .join-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .section-heading .eyebrow, .section-heading h2, .section-heading .section-description { grid-column: 1; }
   .section-heading { margin-bottom: 2rem; }
-  .activity-split .section-heading { margin-bottom: 1rem; }
 }
 
 @media (max-width: 40rem) {
