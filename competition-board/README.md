@@ -40,6 +40,8 @@
 
    Policy 使用 Allow，Include 只放你的管理者信箱。先設定 Pages custom domain，再加 Access policy。
 
+管理頁與管理 API 都會檢查 Cloudflare Access 注入的管理者信箱；即使有人直接使用 `*.pages.dev` 預覽網址，也不能進入管理介面或修改資料。
+
 ## 本機預覽
 
 ```bash
