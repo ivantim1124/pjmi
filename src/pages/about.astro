@@ -1,6 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../data/site';
+
+const interests = [
+  { index: '01', name: '特殊選材', accent: 'cyan' },
+  { index: '02', name: 'ＡＩ', accent: 'blue' },
+  { index: '03', name: '資安', accent: 'coral' },
+  { index: '04', name: 'ＡＰＣＳ', accent: 'lime' },
+  { index: '05', name: '資訊', accent: 'dark' },
+  { index: '06', name: '程式', accent: 'paper' },
+] as const;
 ---
 <BaseLayout title="關於／PJMI 鎮高機研">
   <section class="about-hero container">
@@ -20,7 +29,15 @@ import { siteConfig } from '../data/site';
   <section class="about-interest section container">
     <div class="about-interest-heading" data-reveal>
       <p class="eyebrow">如果對這些有興趣</p>
-      <h2>特殊選材、<br /><span>ＡＩ、資安、</span><br />ＡＰＣＳ、資訊、程式</h2>
+      <h2>興趣方向</h2>
+    </div>
+    <div class="about-interest-grid">
+      {interests.map((interest) => (
+        <article class:list={["about-interest-tile", `about-interest-tile--${interest.accent}`]} data-reveal>
+          <span class="about-interest-tile__index">{interest.index}</span>
+          <strong>{interest.name}</strong>
+        </article>
+      ))}
     </div>
     <div class="about-interest-cta" data-reveal>
       <span class="about-interest-index">01 / JOIN PJMI</span>
