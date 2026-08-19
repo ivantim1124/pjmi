@@ -6,7 +6,7 @@ import { members, siteConfig } from '../data/site';
 ---
 <BaseLayout>
   <section class="hero container">
-    <div class="hero-copy" data-reveal><p class="eyebrow">{siteConfig.name} / {siteConfig.displayName}</p><h1>讓想法 <span>開始運作。</span></h1><div class="hero-actions"><a class="button button--primary" href="/about/">認識社團 <span aria-hidden="true">→</span></a><a class="button button--quiet" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a></div></div>
+    <div class="hero-copy" data-reveal><p class="eyebrow">{siteConfig.name} / {siteConfig.displayName}</p><h1>讓想法 <span>開始運作。</span></h1><div class="hero-actions"><a class="button button--primary" href="/about/">認識社團 <span aria-hidden="true">→</span></a><a class="button button--quiet" href={siteConfig.recruitmentUrl} target="_blank" rel="noopener noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a></div></div>
     <div class="hero-system" data-reveal><div class="system-line system-line--top"><span>STATUS</span><strong>CURIOUS / BUILDING</strong></div><div class="system-core"><span class="system-orbit system-orbit--one"></span><span class="system-orbit system-orbit--two"></span><span class="system-dot"></span><span class="system-core-label">PJMI</span></div><div class="system-line system-line--bottom"><span>LOCAL NODE</span><strong>ZHEN-GAO HIGH</strong></div></div>
   </section>
 
@@ -17,5 +17,5 @@ import { members, siteConfig } from '../data/site';
 
   <section class="section section--dark"><div class="container"><SectionHeading eyebrow="社員索引" title="每個人都帶著一個正在成形的方向。" /><div class="member-preview-grid">{members.slice(0, 3).map((member) => <MemberCard member={member} />)}</div><a class="button button--light" href="/members/">查看全部社員 <span aria-hidden="true">→</span></a></div></section>
 
-  <section class="join-banner container" data-reveal><div><h2>加入我們</h2></div><a class="button button--dark" href={siteConfig.recruitmentUrl} target="_blank" rel="noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a></section>
+  <section class="join-banner container" data-reveal><div><h2>加入我們</h2></div><a class="button button--dark" href={siteConfig.recruitmentUrl} target="_blank" rel="noopener noreferrer">前往招生系統 <span aria-hidden="true">↗</span></a></section>
 </BaseLayout>

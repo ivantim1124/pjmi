@@ -4,7 +4,8 @@ export const onRequestGet: PageFunction = async ({ env, request }) => {
   if (!env.DB) return json({ error: 'D1 is not configured' }, 503);
 
   const url = new URL(request.url);
-  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100);
+  const requestedLimit = Number.parseInt(url.searchParams.get('limit') || '50', 10);
+  const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 50;
 
   try {
     const result = await env.DB.prepare(

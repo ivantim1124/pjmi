@@ -1,4 +1,4 @@
-import { json, parseCompetition, requireAdmin, rowToCompetition, type CompetitionRow, type PageFunction } from '../../_lib';
+import { json, parseCompetition, readJsonObject, requireAdmin, requireSameOrigin, rowToCompetition, type CompetitionRow, type PageFunction } from '../../_lib';
 
 export const onRequestGet: PageFunction = async ({ env, request }) => {
   const denied = await requireAdmin(request, env);
@@ -18,12 +18,14 @@ export const onRequestGet: PageFunction = async ({ env, request }) => {
 };
 
 export const onRequestPost: PageFunction = async ({ env, request }) => {
+  const originDenied = requireSameOrigin(request);
+  if (originDenied) return originDenied;
   const denied = await requireAdmin(request, env);
   if (denied) return denied;
   if (!env.DB) return json({ error: 'D1 is not configured' }, 503);
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const body = await readJsonObject(request);
     const competition = parseCompetition(body);
     const id = crypto.randomUUID();
     const now = new Date().toISOString();

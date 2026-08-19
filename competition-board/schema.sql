@@ -14,3 +14,13 @@ CREATE TABLE IF NOT EXISTS competitions (
 
 CREATE INDEX IF NOT EXISTS competitions_status_date_idx ON competitions(status, event_date);
 CREATE INDEX IF NOT EXISTS competitions_featured_idx ON competitions(featured, event_date);
+
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+  client_hash TEXT PRIMARY KEY,
+  failures INTEGER NOT NULL DEFAULT 0,
+  window_started_at INTEGER NOT NULL,
+  blocked_until INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS admin_login_attempts_updated_idx ON admin_login_attempts(updated_at);

@@ -50,7 +50,12 @@ button, input, select, textarea { font: inherit; }
 .filter-button { border: 1px solid var(--line); padding: .7rem 1rem; background: transparent; color: var(--muted); cursor: pointer; font-weight: 700; }
 .filter-button:hover, .filter-button.is-active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 .competition-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.competition-card { position: relative; min-height: 360px; padding: 1.4rem; display: flex; flex-direction: column; border: 1px solid var(--ink); background: #fffdf7; animation: card-in .55s both; animation-delay: calc(var(--card-index) * 70ms); }
+.competition-card { position: relative; min-height: 360px; padding: 1.4rem; display: flex; flex-direction: column; border: 1px solid var(--ink); background: #fffdf7; animation: card-in .55s both; }
+.competition-card:nth-child(2) { animation-delay: 70ms; }
+.competition-card:nth-child(3) { animation-delay: 140ms; }
+.competition-card:nth-child(4) { animation-delay: 210ms; }
+.competition-card:nth-child(5) { animation-delay: 280ms; }
+.competition-card:nth-child(6) { animation-delay: 350ms; }
 .competition-card--featured { background: var(--cyan); box-shadow: .6rem .6rem 0 var(--ink); }
 .competition-card-top { display: flex; align-items: center; justify-content: space-between; }
 .card-index { font: .72rem 'Space Mono', monospace; }
