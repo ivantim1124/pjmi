@@ -3,10 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../data/site';
 ---
 <BaseLayout minimal>
-  <section class="home-minimal" aria-label="PJMI 比賽專區入口">
+  <section class="home-minimal" aria-label="PJMI 快速入口">
     <a class="home-minimal__link" href={siteConfig.competitionBoardUrl}>
       比賽專區 <span aria-hidden="true">↗</span>
     </a>
+    <a class="home-minimal__link home-minimal__link--blue" href={siteConfig.vocabularyPracticeUrl}>
+      單字練習 <span aria-hidden="true">↗</span>
+    </a>
   </section>
 </BaseLayout>
-
