@@ -291,6 +291,28 @@ test('admin health route requires a session and same origin; status never disclo
   assert.equal(s.rows.length, 1);
 });
 
+test('admin migration baseline remains fixed after cutover despite new Google events', async () => {
+  const s = script(); s.setup();
+  post(s, await envelope(event()));
+  const config = { ...env, GOOGLE_SHEETS_LEGACY_VIEWS: '56', ADMIN_SESSION_SECRET: 'local-admin-session-test-secret',
+    DB: { prepare() { return { bind() { return this; }, async all() { return { results: [{ view_count: 56 }] }; } }; } } };
+  const token = await bridge.createSessionToken(config.ADMIN_SESSION_SECRET);
+  await withGoogle(s, async () => {
+    for (const [enabled, expected] of [['0', 55], ['1', 56]]) {
+      const request = new Request('https://englishword.pjmi.dpdns.org/api/admin/google-sheets', {
+        method: 'POST', headers: { cookie: `__Host-englishword_admin=${token}`, origin: 'https://englishword.pjmi.dpdns.org',
+          'content-type': 'application/json' }, body: JSON.stringify({ action: 'check' }),
+      });
+      const response = await bridge.adminCheck({ request, env: { ...config, GOOGLE_SHEETS_ENABLED: enabled }, params: {} });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.googleViews, 1);
+      assert.equal(result.suggestedOffset, expected);
+    }
+  });
+  assert.equal(s.rows.length, 2);
+});
+
 test('migration freezes D1 counter without any schema or data writes', async () => {
   let reads = 0;
   const DB = { prepare(sql) {

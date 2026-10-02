@@ -17,8 +17,12 @@ export const onRequestPost: PageFunction = async ({ request, env }) => {
     const rows = env.DB ? await env.DB.prepare('SELECT view_count FROM site_stats WHERE stat_key = ?')
       .bind('homepage').all<{ view_count: number }>() : null;
     const legacyViews = Number(rows?.results[0]?.view_count || 0);
+    const suggestedOffset = env.GOOGLE_SHEETS_ENABLED === '1'
+      ? Number(env.GOOGLE_SHEETS_LEGACY_VIEWS || 0) : Math.max(0, legacyViews - current.views);
+    if (!Number.isSafeInteger(suggestedOffset) || suggestedOffset < 0 || suggestedOffset > 1_000_000_000)
+      throw new Error('Invalid legacy baseline');
     return json({ ...sheetStatus(env), connected: true, dailyLimit: result.dailyLimit, rowLimit: result.rowLimit,
-      legacyViews, googleViews: current.views, suggestedOffset: Math.max(0, legacyViews - current.views) });
+      legacyViews, googleViews: current.views, suggestedOffset });
   } catch (error) {
     return json(sheetAdminError(error), 503);
   }
