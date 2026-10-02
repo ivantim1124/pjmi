@@ -1,12 +1,27 @@
-import { isValidCompetitionId, json, parseCompetition, readJsonObject, requireAdmin, requireSameOrigin, type PageFunction } from '../../../_lib';
+import {
+  isValidCompetitionId,
+  json,
+  parseCompetition,
+  purgeCompetitionCache,
+  readJsonObject,
+  requireAdmin,
+  requireSameOrigin,
+  type PageFunction,
+} from "../../../_lib";
 
-export const onRequestPut: PageFunction = async ({ env, request, params }) => {
+export const onRequestPut: PageFunction = async ({
+  env,
+  request,
+  params,
+  waitUntil,
+}) => {
   const originDenied = requireSameOrigin(request);
   if (originDenied) return originDenied;
   const denied = await requireAdmin(request, env);
   if (denied) return denied;
-  if (!env.DB) return json({ error: 'D1 is not configured' }, 503);
-  if (!isValidCompetitionId(params.id)) return json({ error: 'Invalid competition id' }, 400);
+  if (!env.DB) return json({ error: "D1 is not configured" }, 503);
+  if (!isValidCompetitionId(params.id))
+    return json({ error: "Invalid competition id" }, 400);
 
   try {
     const body = await readJsonObject(request);
@@ -14,29 +29,70 @@ export const onRequestPut: PageFunction = async ({ env, request, params }) => {
     const now = new Date().toISOString();
     const result = await env.DB.prepare(
       `UPDATE competitions SET title = ?, category = ?, event_date = ?, location = ?, status = ?, link = ?, featured = ?, updated_at = ? WHERE id = ?`,
-    ).bind(competition.title, competition.category, competition.eventDate, competition.location, competition.status, competition.link, competition.featured, now, params.id).run();
-    if (!result.meta.changes) return json({ error: 'Competition not found' }, 404);
+    )
+      .bind(
+        competition.title,
+        competition.category,
+        competition.eventDate,
+        competition.location,
+        competition.status,
+        competition.link,
+        competition.featured,
+        now,
+        params.id,
+      )
+      .run();
+    if (!result.meta.changes)
+      return json({ error: "Competition not found" }, 404);
+    const purge = purgeCompetitionCache(request);
+    if (waitUntil)
+      waitUntil(
+        purge.catch((error) =>
+          console.error("Unable to purge competition cache", error),
+        ),
+      );
+    else await purge;
     return json({ ok: true });
   } catch (error) {
     console.error(error);
-    return json({ error: error instanceof Error ? error.message : 'Invalid request' }, 400);
+    return json(
+      { error: error instanceof Error ? error.message : "Invalid request" },
+      400,
+    );
   }
 };
 
-export const onRequestDelete: PageFunction = async ({ env, request, params }) => {
+export const onRequestDelete: PageFunction = async ({
+  env,
+  request,
+  params,
+  waitUntil,
+}) => {
   const originDenied = requireSameOrigin(request);
   if (originDenied) return originDenied;
   const denied = await requireAdmin(request, env);
   if (denied) return denied;
-  if (!env.DB) return json({ error: 'D1 is not configured' }, 503);
-  if (!isValidCompetitionId(params.id)) return json({ error: 'Invalid competition id' }, 400);
+  if (!env.DB) return json({ error: "D1 is not configured" }, 503);
+  if (!isValidCompetitionId(params.id))
+    return json({ error: "Invalid competition id" }, 400);
 
   try {
-    const result = await env.DB.prepare('DELETE FROM competitions WHERE id = ?').bind(params.id).run();
-    if (!result.meta.changes) return json({ error: 'Competition not found' }, 404);
+    const result = await env.DB.prepare("DELETE FROM competitions WHERE id = ?")
+      .bind(params.id)
+      .run();
+    if (!result.meta.changes)
+      return json({ error: "Competition not found" }, 404);
+    const purge = purgeCompetitionCache(request);
+    if (waitUntil)
+      waitUntil(
+        purge.catch((error) =>
+          console.error("Unable to purge competition cache", error),
+        ),
+      );
+    else await purge;
     return json({ ok: true });
   } catch (error) {
     console.error(error);
-    return json({ error: 'Unable to delete competition' }, 500);
+    return json({ error: "Unable to delete competition" }, 500);
   }
 };

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "pjmi-network-guard",
+  "main": "src/index.ts",
+  "account_id": "e3511bb864fc9d85d5124c1aa28f7ba6",
+  "compatibility_date": "2026-09-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": { "BLOCK_NON_TW_SITE": "1", "GOOGLE_SHEETS_ENABLED": "1" },
+  "routes": [
+    { "pattern": "pjmi.dpdns.org/*", "zone_name": "pjmi.dpdns.org" },
+    { "pattern": "competitions.pjmi.dpdns.org/*", "zone_name": "pjmi.dpdns.org" },
+    { "pattern": "englishword.pjmi.dpdns.org/*", "zone_name": "pjmi.dpdns.org" }
+  ],
+  "observability": { "enabled": true, "head_sampling_rate": 0.01 }
+}

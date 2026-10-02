@@ -1,0 +1,17 @@
+name = "englishword"
+compatibility_date = "2026-09-13"
+pages_build_output_dir = "dist"
+
+[vars]
+BLOCK_NON_TW_API = "1"
+BLOCK_NON_TW_SITE = "1"
+GOOGLE_SHEETS_ENABLED = "1"
+GOOGLE_SHEETS_LOG_QUIZZES = "0"
+D1_STATS_READ_ONLY = "0"
+GOOGLE_SHEETS_LEGACY_VIEWS = "56"
+# GOOGLE_SHEETS_URL and GOOGLE_SHEETS_SECRET are server secrets, not public vars.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pjmi-englishword"
+database_id = "feadabdc-635b-445b-bdf0-d1145daf8d9e"

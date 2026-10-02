@@ -1,0 +1,50 @@
+---
+import '../styles/englishword.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'englishword／英文單字練習',
+  description = '依照單篇、段考、課本／雜誌或自訂組合練習拼字、中選英與英選中，完成後整理錯題再練一次。',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://englishword.pjmi.dpdns.org').toString();
+---
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="canonical" href={canonical} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="app-header__inner">
+          <a class="app-brand" href="/" aria-label="englishword 練習首頁">
+            <span class="app-brand__mark">englishword</span>
+            <span class="app-brand__name">英文練習簿</span>
+          </a>
+          <nav class="app-nav" aria-label="主要導覽">
+            <a href="/" data-nav-practice>開始練習</a>
+            <a class="app-nav__admin" href="/admin/">管理單字 <span aria-hidden="true">↗</span></a>
+          </nav>
+        </div>
+      </header>
+      <main id="main-content"><slot /></main>
+      <footer class="app-footer">
+        <span class="app-footer__brand">englishword</span>
+        <span>免登入練習／管理者維護單字</span>
+        <a href="https://pjmi.dpdns.org/">PJMI 主站 <span aria-hidden="true">↗</span></a>
+      </footer>
+    </div>
+  </body>
+</html>

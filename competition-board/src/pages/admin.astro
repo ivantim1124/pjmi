@@ -1,5 +1,6 @@
 ---
 import BoardLayout from '../layouts/BoardLayout.astro';
+import SheetsConnection from '../../../src/components/SheetsConnection.astro';
 ---
 <BoardLayout title="管理介面／PJMI 比賽看板" description="">
   <section class="admin-hero">
@@ -56,6 +57,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       </div>
       <div class="admin-list" id="admin-list" aria-live="polite"><div class="board-loading">正在讀取管理資料……</div></div>
     </div>
+    <SheetsConnection />
   </section>
 
   <script>
@@ -122,6 +124,7 @@ import BoardLayout from '../layouts/BoardLayout.astro';
     const showDashboard = () => {
       loginPanel?.classList.add('is-hidden');
       shell?.classList.remove('is-hidden');
+      document.dispatchEvent(new Event('pjmi-admin-ready'));
     };
 
     const render = () => {

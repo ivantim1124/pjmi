@@ -1,6 +1,10 @@
-name = "pjmi-competition-board"
+name = "competition-board"
 compatibility_date = "2026-08-18"
 pages_build_output_dir = "dist"
+
+[vars]
+BLOCK_NON_TW_SITE = "1"
+GOOGLE_SHEETS_ENABLED = "1"
 
 [[d1_databases]]
 binding = "DB"

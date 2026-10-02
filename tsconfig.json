@@ -15,6 +15,6 @@
     "jsx": "preserve",
     "strict": true
   },
-  "exclude": ["dist"],
+  "exclude": ["dist", "network-guard"],
   "include": [".astro/types.d.ts", "**/*"]
 }

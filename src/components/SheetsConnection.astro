@@ -1,0 +1,67 @@
+<section class="sheets-connection" aria-labelledby="sheets-title">
+  <h2 id="sheets-title">Google 試算表串接</h2>
+  <p>先檢查 Google 連線，再啟用統計。此處不儲存或顯示密鑰；連線檢查不會新增測試資料。</p>
+  <p id="sheets-status" role="status" aria-live="polite">尚未讀取串接設定。</p>
+  <p id="sheets-network-status" role="status" aria-live="polite" hidden></p>
+  <p id="sheets-baseline-status" role="status" aria-live="polite" hidden></p>
+  <button id="sheets-check" type="button">檢查 Google 連線</button>
+  <p>單字、比賽資料與每日測驗上限仍由現有資料庫管理。</p>
+</section>
+
+<script>
+  const status = document.querySelector<HTMLElement>('#sheets-status');
+  const button = document.querySelector<HTMLButtonElement>('#sheets-check');
+  const networkStatus = document.querySelector<HTMLElement>('#sheets-network-status');
+  const baselineStatus = document.querySelector<HTMLElement>('#sheets-baseline-status');
+  type Status = { enabled?: boolean; configured?: boolean; connected?: boolean; dailyLimit?: number };
+  const describe = (data: Status & { networkGuard?: Status; legacyViews?: number; googleViews?: number; suggestedOffset?: number }) => {
+    if (!status) return;
+    status.textContent = !data.configured ? '尚未設定：請填入 GOOGLE_SHEETS_URL 與 GOOGLE_SHEETS_SECRET。'
+      : data.connected ? `連線成功；${data.enabled ? '已啟用' : '尚未啟用'}。Google 每日新增上限 ${data.dailyLimit} 筆。`
+      : `網址與 Secret 格式已設定，尚未驗證連線；${data.enabled ? '已啟用' : '尚未啟用'}。`;
+    if (networkStatus && data.networkGuard) {
+      const network = data.networkGuard;
+      networkStatus.hidden = false;
+      networkStatus.textContent = !network.configured ? '主站／比賽站統計入口：設定不完整。'
+        : `主站／比賽站統計入口：${network.connected ? '簽章與連線驗證成功' : '設定完整，尚未驗證連線'}；${network.enabled ? '已啟用' : '尚未啟用'}。`;
+    }
+    if (baselineStatus && data.legacyViews !== undefined) {
+      baselineStatus.hidden = false;
+      baselineStatus.textContent = `既有 D1 瀏覽總數：${data.legacyViews}；Google 瀏覽總數：${data.googleViews}；切換保留基準：${data.suggestedOffset}。`;
+    }
+  };
+  const loadStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/google-sheets', { credentials: 'same-origin', cache: 'no-store' });
+      if (response.ok) describe(await response.json());
+      else if (status) status.textContent = response.status === 401 || response.status === 403
+        ? '管理者登入已過期，請重新登入後檢查連線。' : '暫時無法讀取串接設定。';
+    } catch { if (status) status.textContent = '暫時無法讀取設定。'; }
+  };
+  document.addEventListener('pjmi-admin-ready', loadStatus);
+  if (!document.querySelector('#admin-shell')?.classList.contains('is-hidden')) void loadStatus();
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    if (status) status.textContent = '正在檢查簽章與 Google 連線……';
+    try {
+      const response = await fetch('/api/admin/google-sheets', {
+        method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'check' }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(response.status === 401 || response.status === 403
+        ? '管理者登入已過期，請重新登入後檢查連線。' : data.error || '連線檢查失敗。');
+      describe(data);
+    } catch (error) { if (status) status.textContent = error instanceof Error ? error.message : '連線檢查失敗。'; }
+    finally { button.disabled = false; }
+  });
+</script>
+
+<style>
+  .sheets-connection { grid-column: 1 / -1; border: 1px solid #9aa3af; border-radius: 12px; padding: clamp(20px, 4vw, 32px); }
+  h2 { margin: 0 0 16px; font-size: 24px; }
+  p { line-height: 1.7; margin: 12px 0; overflow-wrap: anywhere; }
+  button { appearance: none; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 18px; border: 1px solid #162131; border-radius: 8px; background: #162131; color: #fff; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  button:focus-visible { outline: 3px solid #0079c8; outline-offset: 3px; }
+</style>

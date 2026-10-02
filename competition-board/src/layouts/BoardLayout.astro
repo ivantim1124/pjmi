@@ -1,5 +1,6 @@
 ---
 import '../styles/board.css';
+import ViewCounter from '../../../src/components/ViewCounter.astro';
 
 interface Props {
   title?: string;
@@ -19,6 +20,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competition
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-src 'none'; img-src 'self' data:; media-src 'none'; object-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; worker-src 'none'; upgrade-insecure-requests" />
     <link rel="canonical" href={canonical} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -44,6 +46,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competition
       <span>PJMI／鎮高機研</span>
       <span>MAKE THINGS MOVE</span>
       <span>比賽看板</span>
+      {!Astro.url.pathname.startsWith('/admin') && <ViewCounter />}
     </footer>
   </body>
 </html>

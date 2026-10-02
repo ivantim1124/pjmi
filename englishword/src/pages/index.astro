@@ -1,0 +1,252 @@
+---
+import EnglishWordLayout from '../layouts/EnglishWordLayout.astro';
+import { previewWords } from '../data/preview';
+
+const previewJson = JSON.stringify(previewWords);
+---
+<EnglishWordLayout>
+  <div class="page-container" id="englishword-app" data-preview={previewJson}>
+    <section class="workspace" id="setup-panel" aria-labelledby="setup-title">
+      <div class="panel panel--raised">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">01 / SETUP</p>
+            <h2 id="setup-title">設定這次練習</h2>
+          </div>
+          <div class="panel__head-status">
+            <span class="session-note">免登入</span>
+            <span class="session-note" id="page-view-count" aria-live="polite">瀏覽次數載入中……</span>
+            <span class="session-note" id="quiz-quota" aria-live="polite">今日測驗次數載入中……</span>
+          </div>
+        </div>
+        <div class="panel__body">
+          <form class="form-stack" id="setup-form">
+            <div class="field">
+              <span id="scope-label">選擇方式</span>
+              <div class="scope-picker" role="group" aria-labelledby="scope-label">
+                <button class="mode-button scope-button is-selected" type="button" data-scope="single" aria-pressed="true">單篇</button>
+                <button class="mode-button scope-button" type="button" data-scope="exam" aria-pressed="false">段考</button>
+                <button class="mode-button scope-button" type="button" data-scope="source" aria-pressed="false">課本／雜誌</button>
+                <button class="mode-button scope-button" type="button" data-scope="custom" aria-pressed="false">自訂組合</button>
+              </div>
+              <span class="field__helper" id="scope-helper">單篇：選擇一個課次，或直接練習全部範圍。</span>
+            </div>
+
+            <div class="scope-fields" id="single-scope-fields">
+              <label class="field" for="range-select">
+                <span>單篇課次</span>
+                <select class="select" id="range-select" name="range" required>
+                  <option value="" selected disabled>載入範圍中……</option>
+                </select>
+                <span class="field__helper" id="range-helper">可由管理者上傳表格建立範圍。</span>
+              </label>
+            </div>
+
+            <div class="scope-fields is-hidden" id="exam-scope-fields">
+              <label class="field" for="exam-select">
+                <span>段考</span>
+                <select class="select" id="exam-select" name="exam">
+                  <option value="" selected disabled>載入段考組合中……</option>
+                </select>
+                <span class="field__helper" id="exam-helper">依編號前三段自動合併同一場段考的所有課次。</span>
+              </label>
+              <label class="field" for="exam-source-select">
+                <span>來源</span>
+                <select class="select" id="exam-source-select" name="exam-source">
+                  <option value="__all__" selected>課本＋雜誌</option>
+                </select>
+                <span class="field__helper">可練習該場段考全部來源，或只選課本／雜誌。</span>
+              </label>
+            </div>
+
+            <div class="scope-fields is-hidden" id="source-scope-fields">
+              <label class="field" for="source-select">
+                <span>來源</span>
+                <select class="select" id="source-select" name="source">
+                  <option value="" selected disabled>載入來源中……</option>
+                </select>
+                <span class="field__helper" id="source-helper">依課次名稱最後的括號辨識「課本」或「雜誌」。</span>
+              </label>
+            </div>
+
+            <div class="scope-fields is-hidden" id="custom-scope-fields">
+              <div class="field">
+                <div class="field-heading">
+                  <span>自訂課次</span>
+                  <div class="collection-actions" aria-label="自訂課次操作">
+                    <button class="button button--quiet" id="select-all-ranges" type="button">全選</button>
+                    <button class="button button--quiet" id="clear-ranges" type="button">清除</button>
+                  </div>
+                </div>
+                <div class="range-checklist" id="range-checklist" aria-label="可選課次">
+                  <div class="empty-state"><strong>正在整理課次</strong><p>資料載入後可以自由勾選多個課次。</p></div>
+                </div>
+                <span class="field__helper" id="custom-helper">可跨學年度、段考與課本／雜誌自由組合。</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <span id="mode-label">出題方式</span>
+              <div class="mode-picker" role="group" aria-labelledby="mode-label">
+                <button class="mode-button is-selected" type="button" data-mode="spelling" aria-pressed="true">拼字</button>
+                <button class="mode-button" type="button" data-mode="meaningToWord" aria-pressed="false">中選英</button>
+                <button class="mode-button" type="button" data-mode="wordToMeaning" aria-pressed="false">英選中</button>
+              </div>
+              <span class="field__helper">每次練習只使用一種題型。</span>
+            </div>
+
+            <label class="field" for="count-select">
+              <span>題數</span>
+              <select class="select" id="count-select" name="count">
+                <option value="5">5 題</option>
+                <option value="10" selected>10 題</option>
+                <option value="20">20 題</option>
+                <option value="all">全部單字</option>
+              </select>
+              <span class="field__helper">題數超過範圍內單字數時，會自動使用全部單字。</span>
+            </label>
+
+            <div class="form-actions">
+              <button class="button button--quiet" id="preview-button" type="button" disabled>預習單字</button>
+              <button class="button button--primary" id="start-button" type="submit" disabled>開始練習 <span aria-hidden="true">→</span></button>
+              <p class="message" id="setup-message" role="status" aria-live="polite"></p>
+            </div>
+            <p class="panel__note">同一 IP 或裝置每天最多 20 次測驗，台灣時間 00:00 重置。開始測驗即計次，提前離開不退還次數；只練錯題也計次，預習、搜尋不計次。共用網路的使用者會共用 IP 額度。</p>
+          </form>
+        </div>
+      </div>
+
+      <aside class="panel" aria-labelledby="inventory-title">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">AVAILABLE / RANGE</p>
+            <h2 id="inventory-title">目前的單字庫</h2>
+          </div>
+        </div>
+        <div class="panel__body">
+          <div class="inventory-list" id="inventory-list" aria-live="polite">
+            <div class="empty-state"><strong>正在整理範圍</strong><p>資料載入後會顯示每組單字數量。</p></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="search-shell" aria-labelledby="search-title">
+      <div class="panel panel--raised">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">SEARCH / WORD LIBRARY</p>
+            <h2 id="search-title">搜尋單字</h2>
+          </div>
+          <span class="session-note" id="search-count">尚未搜尋</span>
+        </div>
+        <div class="panel__body">
+          <form class="search-form" id="search-form" role="search">
+            <div class="field">
+              <span id="search-label">搜尋關鍵字</span>
+              <div class="search-control">
+                <input class="input" id="search-input" name="q" type="search" maxlength="80" autocomplete="off" placeholder="輸入英文、中文或課次名稱" aria-labelledby="search-label" />
+                <button class="button button--dark" id="search-button" type="submit">搜尋</button>
+                <button class="button button--quiet is-hidden" id="clear-search-button" type="button">清除</button>
+              </div>
+              <span class="field__helper">可搜尋英文、中文解釋、例句或課次名稱；找不到站內英文單字時會自動開啟 Cambridge Dictionary。</span>
+            </div>
+          </form>
+          <div class="search-toolbar">
+            <p class="message" id="search-message" role="status" aria-live="polite"></p>
+          </div>
+          <div class="search-results" id="search-results" aria-live="polite"></div>
+          <div class="empty-state is-hidden" id="search-empty-state">
+            <strong>站內找不到這個單字。</strong>
+            <p>可以改用英文、中文或範圍名稱搜尋。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-shell is-hidden" id="preview-panel" aria-labelledby="preview-title">
+      <div class="preview-topline">
+        <div>
+          <p class="eyebrow">PREVIEW / WORD LIST</p>
+          <h2 id="preview-title">先看單字</h2>
+          <p class="preview-note" id="preview-context">先確認目前選取的單字，再開始練習。</p>
+        </div>
+        <button class="button button--quiet" id="close-preview-button" type="button">關閉預習</button>
+      </div>
+      <div class="preview-toolbar">
+        <span class="session-note" id="preview-count">0 字</span>
+        <p class="message" id="preview-message" role="status" aria-live="polite"></p>
+      </div>
+      <div class="preview-list" id="preview-list" aria-live="polite"></div>
+      <div class="empty-state is-hidden" id="preview-empty-state">
+        <strong>目前沒有可預習的單字。</strong>
+        <p>請換一個範圍或先上傳資料。</p>
+      </div>
+    </section>
+
+    <section class="practice-shell is-hidden" id="practice-panel" aria-labelledby="practice-title">
+      <div class="practice-topline">
+        <p class="eyebrow" id="practice-context">PRACTICE / CURRENT SET</p>
+        <button class="button button--quiet" id="quit-button" type="button">離開練習</button>
+      </div>
+      <div class="progress-track" aria-label="練習進度"><div class="progress-bar" id="progress-bar"></div></div>
+
+      <div class="panel panel--raised question-panel">
+        <div class="question-panel__head">
+          <h2 id="practice-title">第 1 題</h2>
+          <span class="question-panel__mode" id="question-mode">拼字</span>
+        </div>
+        <div class="question-panel__body">
+          <p class="prompt-label" id="prompt-label">看中文，輸入英文</p>
+          <p class="prompt-value" id="prompt-value">—</p>
+          <p class="prompt-detail" id="prompt-detail"></p>
+          <p class="question-source" id="question-source"></p>
+          <div class="question-spelling-hint" aria-label="字母提示">
+            <code id="question-hint" class="question-spelling-hint__mask"></code>
+            <span id="question-letter-count" class="question-spelling-hint__count"></span>
+          </div>
+          <div id="answer-area"></div>
+          <div class="feedback is-hidden" id="feedback" role="status" aria-live="polite"></div>
+          <div class="question-actions">
+            <button class="button button--dark is-hidden" id="next-button" type="button">下一題 <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-shell is-hidden" id="result-panel" aria-labelledby="result-title">
+      <div class="result-heading">
+        <p class="eyebrow">RESULT / REVIEW</p>
+        <h1 id="result-title">這次練習完成了。</h1>
+        <p id="result-note">看看哪些字需要再碰一次。</p>
+      </div>
+      <div class="result-stats" aria-label="練習結果">
+        <div class="result-stat"><span class="result-stat__label">總題數</span><strong class="result-stat__value" id="result-total">—</strong></div>
+        <div class="result-stat"><span class="result-stat__label">答對</span><strong class="result-stat__value" id="result-correct">—</strong></div>
+        <div class="result-stat"><span class="result-stat__label">正確率</span><strong class="result-stat__value" id="result-rate">—</strong></div>
+      </div>
+
+      <div class="panel" aria-labelledby="wrong-title">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">WRONG ANSWERS / REVIEW</p>
+            <h2 id="wrong-title">錯題整理</h2>
+          </div>
+          <span class="session-note" id="wrong-count">0 題</span>
+        </div>
+        <div class="panel__body">
+          <ul class="wrong-list" id="wrong-list" aria-live="polite"></ul>
+          <div class="empty-state is-hidden" id="no-wrong-state"><strong>這次沒有錯題。</strong><p>可以換一個範圍或題型繼續練習。</p></div>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="button button--primary" id="retry-wrong-button" type="button">只練錯題 <span aria-hidden="true">→</span></button>
+        <button class="button button--quiet" id="new-practice-button" type="button">重新設定</button>
+      </div>
+      <p class="message" id="retry-message" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <script type="module" src="/app.js?v=20260930-r1-hints" is:inline></script>
+</EnglishWordLayout>

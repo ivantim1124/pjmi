@@ -1,0 +1,86 @@
+---
+import EnglishWordLayout from '../../layouts/EnglishWordLayout.astro';
+import SheetsConnection from '../../../../src/components/SheetsConnection.astro';
+---
+<EnglishWordLayout title="管理單字／englishword" description="登入後上傳英文單字表，管理練習範圍。">
+  <div class="page-container" id="admin-app">
+    <section class="admin-intro" aria-labelledby="admin-title">
+      <p class="eyebrow">ENGLISHWORD / ADMIN</p>
+      <h1 id="admin-title">把單字資料 <span>整理好。</span></h1>
+      <p>只有管理者需要登入。上傳 CSV 後，使用者就能在練習頁依範圍開始作答。</p>
+    </section>
+
+    <section class="login-shell" id="login-shell" aria-labelledby="login-title">
+      <div class="panel panel--raised">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">ACCESS / ADMIN ONLY</p>
+            <h2 id="login-title">管理者登入</h2>
+          </div>
+        </div>
+        <div class="panel__body">
+          <form class="form-stack" id="login-form">
+            <label class="field" for="admin-email">
+              <span>管理者 email</span>
+              <input class="input" id="admin-email" name="email" type="email" autocomplete="username" maxlength="254" required placeholder="you@example.com" />
+              <span class="field__helper">使用 Cloudflare Secret 設定的管理者 email。</span>
+            </label>
+            <label class="field" for="admin-password">
+              <span>管理密碼</span>
+              <input class="input" id="admin-password" name="password" type="password" autocomplete="current-password" maxlength="256" required />
+              <span class="field__helper">登入工作階段會使用 HttpOnly cookie 保存。</span>
+            </label>
+            <div class="form-actions">
+              <button class="button button--dark" id="login-button" type="submit">登入管理介面 <span aria-hidden="true">→</span></button>
+              <p class="message" id="login-message" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-workspace is-hidden" id="admin-shell" aria-labelledby="upload-title">
+      <div class="panel panel--raised">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">IMPORT / SAFE TEXT</p>
+            <h2 id="upload-title">上傳單字表</h2>
+          </div>
+          <button class="text-button" id="logout-button" type="button">登出</button>
+        </div>
+        <div class="panel__body">
+          <form class="form-stack" id="upload-form">
+            <label class="file-drop" for="word-file">
+              <strong>選擇 CSV／TSV 檔案</strong>
+              <span>只接受 UTF-8 純文字，伺服器會檢查檔案格式與內容；上限 2 MB。</span>
+              <span class="file-name" id="file-name">尚未選擇檔案</span>
+              <input class="file-input" id="word-file" name="file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" required />
+            </label>
+            <div class="form-actions">
+              <button class="button button--primary" id="upload-button" type="submit">匯入單字 <span aria-hidden="true">→</span></button>
+              <p class="message" id="upload-message" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+          <p class="upload-note">必填欄位：range、word、meaning。上傳會掃描編碼、控制字元、欄位結構與疑似公式／標籤內容，通過後才會寫入資料庫；不接受 Excel、ZIP 或其他二進位檔。<a href="/word-template.csv" download>下載表格範例</a></p>
+        </div>
+      </div>
+
+      <aside class="panel" aria-labelledby="summary-title">
+        <div class="panel__head">
+          <div>
+            <p class="eyebrow">LIBRARY / SUMMARY</p>
+            <h2 id="summary-title">單字庫摘要</h2>
+          </div>
+        </div>
+        <div class="panel__body">
+          <dl class="summary-list" id="summary-list" aria-live="polite">
+            <div class="summary-row"><dt>正在讀取</dt><dd>—</dd></div>
+          </dl>
+        </div>
+      </aside>
+      <SheetsConnection />
+    </section>
+  </div>
+
+  <script src="/admin.js?v=20260930-sheets" is:inline></script>
+</EnglishWordLayout>
