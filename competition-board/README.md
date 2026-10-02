@@ -2,7 +2,7 @@
 
 這是一個獨立的 Astro 子專案，公開頁面與管理介面部署到 Cloudflare Pages，資料存放在 Cloudflare D1。
 
-Google 試算表的管理者連線檢查入口已預備、預設停用。比賽內容不會自動搬到 Google，正式網域的選用瀏覽計數由網路防護 Worker 提供；Script 與設定請看 [`設定指南`](../integrations/google-sheets/設定指南.md)。
+Google 試算表的管理者連線檢查入口已預備；正式環境狀態請以管理頁為準。比賽內容仍保留在 D1，正式網域的瀏覽計數由網路防護 Worker 提供；Script 與設定請看 [`設定指南`](../integrations/google-sheets/設定指南.md)。
 
 ## 建議網址
 
@@ -14,8 +14,8 @@ Google 試算表的管理者連線檢查入口已預備、預設停用。比賽�
 ## Cloudflare 設定順序
 
 1. 在 Cloudflare Workers & Pages 建立 Pages 專案，連結 GitHub `ivantim1124/pjmi`。
-2. Build command 設為 `cd competition-board && npm install && npm run build`。
-3. Build output directory 設為 `competition-board/dist`。
+2. Root directory 必須設為 `competition-board`，Build command 設為 `npm install && npm run build`。
+3. Build output directory 設為 `dist`。不能只在指令中 `cd` 而保持根目錄空白，否則 Pages 自動部署可能漏掉專案的 `functions/`，導致管理 API 回傳 404。
 4. Pages 專案完成第一次部署後，在 Custom domains 加入 `competitions.pjmi.dpdns.org`。
 5. 在 DNS 建立 `competitions` 的 CNAME，指向 Cloudflare Pages 提供的 `*.pages.dev` 網址。
 6. 建立 D1：
