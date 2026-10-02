@@ -26,6 +26,7 @@ function script(properties = {}) {
   const props = { SPREADSHEET_ID: 'test_spreadsheet_id_12345', BRIDGE_SECRET: secret, ...properties };
   const rows = [];
   let sheetReads = 0;
+  const textCells = new Set();
   let busy = false;
   let held = false;
   const sheet = {
@@ -36,7 +37,13 @@ function script(properties = {}) {
       const range = {
         getValues: () => Array.from({ length: count }, (_, index) => Array.from({ length: width }, (_, offset) => rows[start - 1 + index]?.[col - 1 + offset] ?? '')),
         getFormulas: () => Array.from({ length: count }, () => Array(width).fill('')),
-        setValues(values) { values.forEach((row, index) => { rows[start - 1 + index] = [...row]; }); return range; },
+        setNumberFormat(format) {
+          if (format === '@') for (let i = 0; i < count; i++) for (let j = 0; j < width; j++) textCells.add(`${start + i}:${col + j}`);
+          return range;
+        },
+        setValues(values) { values.forEach((row, index) => { rows[start - 1 + index] = row.map((value, offset) =>
+          typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !textCells.has(`${start + index}:${col + offset}`)
+            ? new Date(`${value}T00:00:00+08:00`) : value); }); return range; },
         setFontWeight() { return range; }, setBackground() { return range; },
       };
       return range;
@@ -115,6 +122,18 @@ test('setup is non-destructive and idempotent; signed health check writes no eve
     const result = await bridge.callSheet({ ...env, GOOGLE_SHEETS_ENABLED: '0' }, { action: 'health', site: 'englishword' });
     assert.equal(result.ok, true); assert.equal(result.dailyLimit, 1000);
   });
+  assert.equal(s.rows.length, 2);
+});
+
+test('new ledger dates remain text and are readable after Sheets date auto-conversion', async () => {
+  const s = script(); s.setup();
+  const first = post(s, await envelope(event()));
+  assert.equal(first.ok, true);
+  assert.equal(typeof s.rows[1][1], 'string');
+  assert.match(s.rows[1][1], /^\d{4}-\d{2}-\d{2}$/);
+  const read = post(s, await envelope({ action: 'views.read', site: 'englishword' }));
+  assert.equal(read.ok, true);
+  assert.equal(read.views, 1);
   assert.equal(s.rows.length, 2);
 });
 

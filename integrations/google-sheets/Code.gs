@@ -121,6 +121,8 @@ function pjmiOperate_(payload, config, now) {
   if (rows.length >= config.rowLimit) return { ok: false, code: 'ROW_LIMIT' };
   // All inputs are enums, validated identifiers, digests or numbers. User text
   // and spreadsheet formulas never reach this single-row commit.
+  // Preserve the YYYY-MM-DD ledger key as text, not a Sheets Date value.
+  ledger.sheet.getRange(rows.length + 2, 2, 1, 1).setNumberFormat('@');
   ledger.sheet.getRange(rows.length + 2, 1, 1, PJMI_HEADER.length).setValues([[
     now, day, payload.site, event, payload.eventId, payload.ipHash, payload.deviceHash, payload.mode || '',
   ]]);
