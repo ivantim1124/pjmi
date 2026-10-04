@@ -1,11 +1,9 @@
 ---
 import { siteConfig } from '../data/site';
 
-const currentPath = Astro.url.pathname;
 const links = [
-  { href: '/about/', label: '關於' },
-  { href: '/members/', label: '社員' },
-  { href: '/activities/', label: '活動' },
+  { href: siteConfig.competitionBoardUrl, label: '比賽專區' },
+  { href: siteConfig.vocabularyPracticeUrl, label: '單字練習' },
 ];
 ---
 <header class="site-header">
@@ -15,16 +13,12 @@ const links = [
       <span class="brand-name">{siteConfig.displayName}</span>
     </a>
     <nav class="desktop-nav" aria-label="主要導覽">
-      {links.map((link) => <a class:list={["nav-link", currentPath.startsWith(link.href) && "is-current"]} href={link.href} aria-current={currentPath.startsWith(link.href) ? 'page' : undefined}>{link.label}</a>)}
-      <a class="nav-link" href={siteConfig.competitionBoardUrl}>比賽看板 <span aria-hidden="true">↗</span></a>
-      <a class="nav-cta" href={siteConfig.recruitmentUrl} target="_blank" rel="noopener noreferrer">招生報名 <span aria-hidden="true">↗</span></a>
+      {links.map((link) => <a class="nav-link" href={link.href}>{link.label} <span aria-hidden="true">↗</span></a>)}
     </nav>
     <details class="mobile-nav">
       <summary aria-label="開啟導覽選單"><span></span><span></span></summary>
       <div class="mobile-nav-panel">
-        {links.map((link) => <a class:list={["mobile-nav-link", currentPath.startsWith(link.href) && "is-current"]} href={link.href} aria-current={currentPath.startsWith(link.href) ? 'page' : undefined}>{link.label}</a>)}
-        <a class="mobile-nav-link" href={siteConfig.competitionBoardUrl}>比賽看板 <span aria-hidden="true">↗</span></a>
-        <a class="mobile-nav-link mobile-nav-link--accent" href={siteConfig.recruitmentUrl} target="_blank" rel="noopener noreferrer">招生報名 <span aria-hidden="true">↗</span></a>
+        {links.map((link) => <a class="mobile-nav-link" href={link.href}>{link.label} <span aria-hidden="true">↗</span></a>)}
       </div>
     </details>
   </div>

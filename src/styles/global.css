@@ -196,8 +196,9 @@ h1 span, h2 span { color: var(--color-blue); }
 .join-callout { text-align: center; }
 .join-callout h2 { max-width: 16ch; margin-inline: auto; font-size: clamp(2rem, 5vw, 4.5rem); }
 .join-callout > p:last-child { margin-bottom: 0; color: var(--color-muted); font-size: var(--text-md); }
-.not-found { min-height: 60svh; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding-block: 5rem; }
-.not-found h1 { margin-bottom: 1rem; }
+.not-found { min-height: 100svh; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding-block: 3rem; }
+.not-found h1 { max-width: none; margin-bottom: 1rem; font-size: clamp(2rem, 7vw, 4.5rem); }
+.not-found .hero-actions { margin-top: 0; }
 .not-found > p:not(.eyebrow) { margin-bottom: 2rem; color: var(--color-muted); font-size: var(--text-md); }
 
 [data-reveal] { animation: rise-in var(--dur-slow) var(--ease-out) both; }

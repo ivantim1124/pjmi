@@ -1,9 +1,3 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import ActivityRow from '../../components/ActivityRow.astro';
-import SectionHeading from '../../components/SectionHeading.astro';
-import { activities } from '../../data/site';
+return Astro.redirect('/', 301);
 ---
-<BaseLayout title="活動／PJMI 鎮高機研">
-  <section class="section container"><SectionHeading eyebrow="參與過的活動" title="把過程也算進成果裡。" /><div class="activity-log">{activities.map((activity) => <ActivityRow activity={activity} />)}</div></section>
-</BaseLayout>

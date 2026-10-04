@@ -29,7 +29,7 @@ npm run build
 - Custom domain：`pjmi.dpdns.org`
 - Cloudflare DNS：`@` 與 `www` CNAME 指向 `ivantim1124.github.io`
 
-網站內容主要放在 `src/data/site.ts`，可替換社員與活動資料。
+主頁僅保留比賽專區與單字練習入口；網址設定放在 `src/data/site.ts`。關於、社員與活動舊頁已改成回到主頁的靜態轉址，不再發布舊內容。404 頁也使用相同的簡潔版介面，不顯示舊導覽或頁尾；Cloudflare 的 403 國家／VPN 封鎖保持獨立且不變。
 
 ## 比賽看板
 

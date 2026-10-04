@@ -1,4 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../data/site';
 ---
-<BaseLayout title="找不到頁面／PJMI 鎮高機研"><section class="not-found container"><p class="eyebrow">404 / SIGNAL LOST</p><h1>這條路徑 <span>還沒有接上。</span></h1><p>回到首頁，或從導覽重新選一個入口。</p><a class="button button--primary" href="/">回到首頁 <span aria-hidden="true">→</span></a></section></BaseLayout>
+<BaseLayout title="找不到頁面／PJMI 鎮高機研" minimal noindex>
+  <section class="not-found container" aria-labelledby="not-found-title">
+    <p class="eyebrow">404 / PJMI</p>
+    <h1 id="not-found-title">找不到這個頁面</h1>
+    <p>請回到主頁，或使用下方的快速入口。</p>
+    <nav class="hero-actions" aria-label="可用入口">
+      <a class="button button--primary" href="/">回到主頁</a>
+      <a class="button button--quiet" href={siteConfig.competitionBoardUrl}>比賽專區 <span aria-hidden="true">↗</span></a>
+      <a class="button button--quiet" href={siteConfig.vocabularyPracticeUrl}>單字練習 <span aria-hidden="true">↗</span></a>
+    </nav>
+  </section>
+</BaseLayout>

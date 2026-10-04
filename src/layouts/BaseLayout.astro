@@ -8,12 +8,14 @@ interface Props {
   title?: string;
   description?: string;
   minimal?: boolean;
+  noindex?: boolean;
 }
 
 const {
   title = `${siteConfig.name}／${siteConfig.displayName}`,
   description = siteConfig.description,
-  minimal = false,
+  minimal = true,
+  noindex = false,
 } = Astro.props;
 const canonical = Astro.url.href;
 ---
@@ -23,6 +25,7 @@ const canonical = Astro.url.href;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="theme-color" content="#252a44" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; form-action 'self'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; upgrade-insecure-requests" />
@@ -38,4 +41,3 @@ const canonical = Astro.url.href;
     {!minimal && <SiteFooter />}
   </body>
 </html>
-
