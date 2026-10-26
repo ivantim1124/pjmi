@@ -590,12 +590,22 @@ passwordForm.addEventListener('submit', async (event) => {
     if (!response.ok) {
       printWindow?.close();
       passwordInput.value = '';
+      const body = await response.json().catch(() => ({}));
       if (response.status === 429) {
         const seconds = Number(response.headers.get('retry-after') || 1800);
         throw new Error(`嘗試次數過多，請約 ${Math.max(1, Math.ceil(seconds / 60))} 分鐘後再試。`);
       }
-      if (response.status === 503) throw new Error('管理登入防護尚未設定完成。');
-      throw new Error('密碼錯誤。');
+      if (response.status === 401) throw new Error('密碼錯誤，請檢查後再試。');
+      if (response.status === 403) {
+        throw new Error(body.error || '登入請求遭網站安全檢查拒絕，請重新載入後再試。');
+      }
+      if (response.status === 503) {
+        if (body.error === 'Admin login protection is not configured') {
+          throw new Error('管理登入防護尚未設定完成，請聯絡網站管理員。');
+        }
+        throw new Error('登入服務暫時無法使用，可能是 Cloudflare 登入防護或資料庫回應異常，請稍後再試。');
+      }
+      throw new Error(body.error || `登入服務回應異常（${response.status}），請稍後再試。`);
     }
     authenticated = true;
     passwordInput.value = '';
