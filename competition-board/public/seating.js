@@ -1,5 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const MAX_SEATS = 200;
+const UNASSIGNED_SEAT = '__unoccupied__';
 const PLAN_KEY = 'pjmi-seating-plan-v1';
 
 const grid = $('#seat-grid');
@@ -15,9 +16,13 @@ const rowInput = $('#row-count');
 const columnInput = $('#column-count');
 const arrangementCount = $('#arrangement-count');
 const assignmentNote = $('#assignment-note');
-const studentSelect = $('#seat-student');
+const studentNumberInput = $('#seat-student-number');
 const studentName = $('#seat-student-name');
 const selectedSeatLabel = $('#selected-seat-label');
+const seatEditor = $('#seat-editor');
+const seatEditorHint = $('#seat-editor-hint');
+const seatEditorFields = $('#seat-editor-fields');
+const markUnoccupiedButton = $('#mark-seat-unoccupied');
 const randomizeButton = $('#randomize-seats');
 const labelsButton = $('#get-labels');
 const printChartButton = $('#print-chart');
@@ -69,6 +74,10 @@ const loadPlan = () => {
     const seen = new Set();
     if (Array.isArray(stored.assignments)) {
       stored.assignments.slice(0, assignments.length).forEach((value, index) => {
+        if (value === UNASSIGNED_SEAT) {
+          assignments[index] = UNASSIGNED_SEAT;
+          return;
+        }
         const seatNumber = normalizeSeatNumber(value);
         if (seatNumber && !seen.has(seatNumber)) {
           assignments[index] = seatNumber;
@@ -126,33 +135,38 @@ const renderRoster = () => {
   });
 };
 
-const renderStudentSelect = () => {
-  studentSelect.replaceChildren();
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = rosterLoaded ? '選擇座號' : '請先登入並載入名單';
-  studentSelect.append(placeholder);
-  roster.forEach((student) => {
-    const option = document.createElement('option');
-    option.value = student.seatNumber;
-    option.textContent = `${student.seatNumber} 號　${student.name}`;
-    studentSelect.append(option);
-  });
-  const assigned = selectedIndex === null ? '' : assignments[selectedIndex] || '';
-  studentSelect.value = assigned;
-  studentSelect.disabled = !rosterLoaded || selectedIndex === null || roster.length === 0;
-  if (assigned) {
-    const student = rosterByNumber().get(assigned);
-    studentName.textContent = student ? `姓名：${student.name}` : '此座號已不在目前名單中。';
+const renderSeatEditor = () => {
+  const currentAssignment = selectedIndex === null ? null : assignments[selectedIndex];
+  const isUnoccupied = currentAssignment === UNASSIGNED_SEAT;
+  const assignedNumber = currentAssignment && !isUnoccupied ? currentAssignment : '';
+  const assignedStudent = assignedNumber ? rosterByNumber().get(assignedNumber) : null;
+  seatEditor.classList.toggle('is-active', selectedIndex !== null);
+  seatEditorHint.classList.toggle('is-hidden', selectedIndex !== null);
+  seatEditorFields.classList.toggle('is-hidden', selectedIndex === null);
+  studentNumberInput.value = assignedNumber;
+  studentNumberInput.disabled = !rosterLoaded || selectedIndex === null || roster.length === 0;
+  if (selectedIndex === null) {
+    selectedSeatLabel.textContent = '尚未選擇座位';
+    studentName.textContent = '點選座位後輸入座號，姓名會自動帶入。';
+  } else if (isUnoccupied) {
+    studentName.textContent = '此座位指定為無人；隨機安排會略過此座位。';
+  } else if (assignedNumber) {
+    studentName.textContent = assignedStudent
+      ? `姓名：${assignedStudent.name}`
+      : '此座號已不在目前名單中。';
   } else {
-    studentName.textContent = selectedIndex === null
-      ? '點擊座位後選擇座號，姓名會自動帶入。'
-      : '此座位尚未安排學生。';
+    studentName.textContent = roster.length
+      ? '輸入座號後，姓名會自動帶入；按 Enter 或離開欄位套用。'
+      : '目前名單是空的，仍可將此座位指定為無人。';
   }
-  clearSelectedButton.disabled = selectedIndex === null || !assignments[selectedIndex];
+  markUnoccupiedButton.disabled = selectedIndex === null || !rosterLoaded || isUnoccupied;
+  markUnoccupiedButton.textContent = isUnoccupied ? '已指定無人座位' : '指定無人座位';
+  clearSelectedButton.disabled = selectedIndex === null || currentAssignment === null;
   randomizeButton.disabled = !rosterLoaded || roster.length === 0;
-  labelsButton.disabled = !rosterLoaded || !assignments.some((number) => number && rosterByNumber().has(number));
-  printChartButton.disabled = !rosterLoaded || !assignments.some((number) => number && rosterByNumber().has(number));
+  const hasAssignedStudents = assignments.some((number) => number && number !== UNASSIGNED_SEAT && rosterByNumber().has(number));
+  const hasMarkedSeats = assignments.includes(UNASSIGNED_SEAT);
+  labelsButton.disabled = !rosterLoaded || !hasAssignedStudents;
+  printChartButton.disabled = !rosterLoaded || (!hasAssignedStudents && !hasMarkedSeats);
 };
 
 const renderSeats = () => {
@@ -170,31 +184,31 @@ const renderSeats = () => {
   visibleAssignments.forEach((seatNumber, index) => {
     const rowNumber = Math.floor(index / columns) + 1;
     const columnNumber = (index % columns) + 1;
-    const student = seatNumber ? students.get(seatNumber) : null;
+    const isUnoccupied = seatNumber === UNASSIGNED_SEAT;
+    const student = seatNumber && !isUnoccupied ? students.get(seatNumber) : null;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `seat-cell${student ? ' is-occupied' : ''}${selectedIndex === index ? ' is-selected' : ''}`;
+    button.className = `seat-cell${student ? ' is-occupied' : ''}${isUnoccupied ? ' is-unoccupied' : ''}${selectedIndex === index ? ' is-selected' : ''}`;
     button.dataset.index = String(index);
     button.setAttribute('aria-label', student
       ? `第 ${rowNumber} 排第 ${columnNumber} 列，${student.seatNumber} 號 ${student.name}`
-      : `第 ${rowNumber} 排第 ${columnNumber} 列，空座位`);
+      : `第 ${rowNumber} 排第 ${columnNumber} 列，${isUnoccupied ? '指定無人座位' : '空座位'}`);
     const position = document.createElement('span');
     position.className = 'seat-position';
     position.textContent = `${String(rowNumber).padStart(2, '0')} / ${String(columnNumber).padStart(2, '0')}`;
     const number = document.createElement('strong');
     number.className = 'seat-number';
-    number.textContent = student ? `${student.seatNumber} 號` : '＋';
+    number.textContent = student ? `${student.seatNumber} 號` : isUnoccupied ? '—' : '＋';
     const name = document.createElement('span');
     name.className = 'seat-name';
-    name.textContent = student ? student.name : '空座位';
+    name.textContent = student ? student.name : isUnoccupied ? '指定無人' : '空座位';
     button.append(position, number, name);
     button.addEventListener('click', () => selectSeat(index));
     grid.append(button);
   });
 
-  if (selectedIndex === null) selectedSeatLabel.textContent = '尚未選擇座位';
-  else selectedSeatLabel.textContent = `第 ${Math.floor(selectedIndex / columns) + 1} 排・第 ${(selectedIndex % columns) + 1} 列`;
-  renderStudentSelect();
+  if (selectedIndex !== null) selectedSeatLabel.textContent = `第 ${Math.floor(selectedIndex / columns) + 1} 排・第 ${(selectedIndex % columns) + 1} 列`;
+  renderSeatEditor();
 };
 
 const renderAccess = () => {
@@ -211,7 +225,10 @@ const selectSeat = (index) => {
   }
   selectedIndex = index;
   renderSeats();
-  studentSelect.focus();
+  if (!studentNumberInput.disabled) {
+    studentNumberInput.focus({ preventScroll: true });
+    studentNumberInput.select();
+  }
 };
 
 const revalidateAssignments = () => {
@@ -220,6 +237,7 @@ const revalidateAssignments = () => {
   const seen = new Set();
   assignments = assignments.map((number) => {
     if (!number) return null;
+    if (number === UNASSIGNED_SEAT) return UNASSIGNED_SEAT;
     if (!validNumbers.has(number) || seen.has(number)) {
       removed += 1;
       return null;
@@ -458,11 +476,11 @@ const randomize = () => {
     openLogin('roster');
     return;
   }
-  const placed = new Set(assignments.filter(Boolean));
+  const placed = new Set(assignments.filter((number) => number && number !== UNASSIGNED_SEAT));
   const remaining = roster.map((student) => student.seatNumber).filter((number) => !placed.has(number));
   const emptyIndexes = assignments.map((number, index) => number ? -1 : index).filter((index) => index >= 0);
   if (remaining.length > emptyIndexes.length) {
-    setStatus(assignmentNote, `尚有 ${remaining.length} 位未安排，但只剩 ${emptyIndexes.length} 個空位；請增加座位數或先清空部分指定座位。`, 'message-error');
+    setStatus(assignmentNote, `尚有 ${remaining.length} 位未安排，但只有 ${emptyIndexes.length} 個可安排空位；請增加座位數或清除部分座位設定。`, 'message-error');
     return;
   }
   if (!remaining.length) {
@@ -656,16 +674,64 @@ document.querySelectorAll('[data-layout]').forEach((button) => {
   });
 });
 
-studentSelect.addEventListener('change', () => {
+const commitSeatNumber = () => {
   if (selectedIndex === null) return;
-  const nextSeatNumber = normalizeSeatNumber(studentSelect.value);
+  const rawValue = studentNumberInput.value.trim();
   const previousSeatNumber = assignments[selectedIndex];
+  if (!rawValue) {
+    if (previousSeatNumber && previousSeatNumber !== UNASSIGNED_SEAT) {
+      assignments[selectedIndex] = null;
+      savePlan();
+      renderSeats();
+      setStatus(assignmentNote, '已清除這位學生的座位，該座位可供隨機安排。');
+    }
+    return;
+  }
+  const nextSeatNumber = normalizeSeatNumber(rawValue);
+  const student = nextSeatNumber ? rosterByNumber().get(nextSeatNumber) : null;
+  if (!student) {
+    studentNumberInput.value = previousSeatNumber && previousSeatNumber !== UNASSIGNED_SEAT ? previousSeatNumber : '';
+    studentNumberInput.select();
+    studentName.textContent = '名單中找不到這個座號，請輸入有效座號。';
+    setStatus(assignmentNote, '名單中找不到這個座號，尚未變更座位。', 'message-error');
+    return;
+  }
   const previousIndex = nextSeatNumber ? assignments.indexOf(nextSeatNumber) : -1;
-  if (previousIndex >= 0 && previousIndex !== selectedIndex) assignments[previousIndex] = previousSeatNumber || null;
-  assignments[selectedIndex] = nextSeatNumber || null;
+  if (previousIndex >= 0 && previousIndex !== selectedIndex) {
+    assignments[previousIndex] = previousSeatNumber && previousSeatNumber !== UNASSIGNED_SEAT
+      ? previousSeatNumber
+      : null;
+  }
+  assignments[selectedIndex] = nextSeatNumber;
   savePlan();
   renderSeats();
-  setStatus(assignmentNote, nextSeatNumber ? '座位已更新；如選到已安排的座號，兩位學生已交換位置。' : '座位已清空。');
+  setStatus(assignmentNote, previousIndex >= 0 && previousIndex !== selectedIndex
+    ? '座位已更新；原座位上的學生已交換到新座位。'
+    : `已安排 ${student.name}。`);
+};
+
+studentNumberInput.addEventListener('input', () => {
+  if (selectedIndex === null) return;
+  const seatNumber = normalizeSeatNumber(studentNumberInput.value);
+  const student = seatNumber ? rosterByNumber().get(seatNumber) : null;
+  if (student) studentName.textContent = `姓名：${student.name}（按 Enter 或離開欄位套用）`;
+  else if (studentNumberInput.value.trim()) studentName.textContent = '輸入名單中的座號，姓名會自動帶入。';
+  else studentName.textContent = '輸入座號後，姓名會自動帶入。';
+});
+
+studentNumberInput.addEventListener('change', commitSeatNumber);
+studentNumberInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  commitSeatNumber();
+});
+
+markUnoccupiedButton.addEventListener('click', () => {
+  if (selectedIndex === null || !rosterLoaded) return;
+  assignments[selectedIndex] = UNASSIGNED_SEAT;
+  savePlan();
+  renderSeats();
+  setStatus(assignmentNote, '此座位已指定無人，隨機安排會略過此座位。');
 });
 
 clearSelectedButton.addEventListener('click', () => {
@@ -673,14 +739,14 @@ clearSelectedButton.addEventListener('click', () => {
   assignments[selectedIndex] = null;
   savePlan();
   renderSeats();
-  setStatus(assignmentNote, '已清除此座位。');
+  setStatus(assignmentNote, '已清除此座位設定；此座位可供隨機安排。');
 });
 
 randomizeButton.addEventListener('click', randomize);
 
 $('#clear-seats').addEventListener('click', () => {
   if (!assignments.some(Boolean)) return;
-  if (!window.confirm('確定清空目前所有座位安排？')) return;
+  if (!window.confirm('確定清空目前所有座位安排與無人設定？')) return;
   assignments = Array(rows * columns).fill(null);
   selectedIndex = null;
   savePlan();

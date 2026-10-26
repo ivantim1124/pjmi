@@ -83,23 +83,31 @@ import BoardLayout from '../layouts/BoardLayout.astro';
       </div>
       <p class="assignment-note" id="assignment-note" role="status">先登入並匯入名單，再點選座位指定座號。</p>
 
-      <div class="stage-marker"><span>FRONT / 前方</span><strong>講台</strong></div>
-      <div class="seat-grid-viewport" aria-label="座位表，可左右滑動查看">
-        <div class="seat-grid seat-grid--cols-6" id="seat-grid" aria-live="polite"></div>
-      </div>
+      <div class="seat-map-editor-layout">
+        <div class="seat-map-column">
+          <div class="stage-marker"><span>FRONT / 前方</span><strong>講台</strong></div>
+          <div class="seat-grid-viewport" aria-label="座位表，可左右滑動查看">
+            <div class="seat-grid seat-grid--cols-6" id="seat-grid" aria-live="polite"></div>
+          </div>
+        </div>
 
-      <section class="seat-editor" aria-labelledby="seat-editor-title">
-        <div class="seat-editor-heading">
-          <div><p class="eyebrow">ADJUST / SWAP</p><h3 id="seat-editor-title">調整座位</h3></div>
-          <span id="selected-seat-label">尚未選擇座位</span>
-        </div>
-        <div class="seat-editor-fields">
-          <label for="seat-student">指定座號</label>
-          <select id="seat-student" disabled><option value="">請先登入並選擇座位</option></select>
-          <p id="seat-student-name" class="seat-student-name">點擊座位後選擇座號，姓名會自動帶入。</p>
-          <button class="text-button text-button--danger" id="clear-seat" type="button" disabled>清除此座位</button>
-        </div>
-      </section>
+        <section class="seat-editor" id="seat-editor" aria-labelledby="seat-editor-title">
+          <div class="seat-editor-heading">
+            <div><p class="eyebrow">ADJUST / SWAP</p><h3 id="seat-editor-title">調整座位</h3></div>
+            <span id="selected-seat-label">尚未選擇座位</span>
+          </div>
+          <p id="seat-editor-hint" class="seat-editor-hint">點選座位後，可直接輸入座號，或指定為無人座位。</p>
+          <div id="seat-editor-fields" class="seat-editor-fields is-hidden">
+            <label for="seat-student-number">輸入座號</label>
+            <input id="seat-student-number" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" maxlength="3" autocomplete="off" spellcheck="false" aria-describedby="seat-student-name" disabled />
+            <p id="seat-student-name" class="seat-student-name">輸入座號後，姓名會自動帶入。</p>
+            <div class="seat-editor-actions">
+              <button class="board-button board-button--quiet" id="mark-seat-unoccupied" type="button" disabled>指定無人座位</button>
+              <button class="text-button text-button--danger" id="clear-seat" type="button" disabled>清除此座位設定</button>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <p class="privacy-note"><span aria-hidden="true">⌑</span> 座位安排只保存在目前瀏覽器。名條由伺服器驗證管理密碼後產生，不留存列印內容。</p>
     </section>

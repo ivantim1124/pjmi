@@ -65,7 +65,7 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 
 座位工具使用專用子網域 `seating.pjmi.dpdns.org`，由同一個 Cloudflare Pages 專案與 `ADMIN_PASSWORD` 提供。Pages middleware 會將該子網域的根網址導向 `/seating/`；比賽看板網域的首頁維持原樣。正式開通時，在 Cloudflare Workers & Pages → `competition-board` → Custom domains 加入 `seating.pjmi.dpdns.org`，並確認 DNS CNAME 指向這個 Pages 專案提供的 `*.pages.dev` 網址。必須先把子網域綁定到 Pages 專案，再建立／確認 CNAME；只加 DNS 記錄並不足以啟用 Pages 網址。
 
-登入後可以匯入 CSV、以座號對應姓名、保留手動指定的座位後隨機填入其他座位，並調整已安排的位置。匯入名單只存到 D1 的 `seating_students` 表；座位安排只保存在當前瀏覽器，登出時會清除。名條 API 每次列印都需要重新輸入管理密碼，並只回傳由 D1 名單查出的座號與姓名，不保存列印資料。
+登入後可以匯入 CSV、點選座位直接輸入座號並自動帶入姓名，也可以指定無人座位；隨機安排會保留手動指定並略過無人座位。匯入名單只存到 D1 的 `seating_students` 表；座位安排只保存在當前瀏覽器，登出時會清除。名條 API 每次列印都需要重新輸入管理密碼，並只回傳由 D1 名單查出的座號與姓名，不保存列印資料。
 
 標準 CSV 範本只有兩欄：
 
