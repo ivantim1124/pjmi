@@ -260,6 +260,7 @@ const selectSeat = async (index) => {
       }
       return;
     }
+    if (valid === null) return;
     setStatus(assignmentNote, '請先登入並載入名單，再指定座號。');
     openLogin('roster');
     return;
@@ -292,7 +293,10 @@ const revalidateAssignments = () => {
 
 const loadRoster = async () => {
   try {
-    const response = await fetch('/api/admin/seating/roster', { credentials: 'same-origin' });
+    const response = await fetch('/api/admin/seating/roster', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
     if (response.status === 401) {
       clearSessionState({ message: '登入工作階段已失效，請重新登入。', kind: 'message-error' });
       return false;
@@ -316,7 +320,12 @@ const loadRoster = async () => {
       : '後台尚無名單，請先匯入 CSV。');
     return true;
   } catch (error) {
-    authenticated = await checkSession();
+    const sessionState = await checkSession();
+    if (sessionState === false) {
+      clearSessionState({ message: '登入工作階段已失效，請重新登入。', kind: 'message-error' });
+      return false;
+    }
+    if (sessionState === true) authenticated = true;
     rosterLoaded = false;
     roster = [];
     pendingRoster = [];
@@ -329,12 +338,15 @@ const loadRoster = async () => {
 
 const checkSession = async () => {
   try {
-    const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
-    if (!response.ok) return false;
+    const response = await fetch('/api/auth/session', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
     const body = await response.json();
-    return Boolean(body.authenticated);
+    return typeof body.authenticated === 'boolean' ? body.authenticated : null;
   } catch {
-    return false;
+    return null;
   }
 };
 
@@ -342,7 +354,7 @@ const synchronizeSession = (clearPlanOnLogout = false) => {
   if (sessionSyncPromise) return sessionSyncPromise;
   sessionSyncPromise = (async () => {
     const valid = await checkSession();
-    if (!valid) {
+    if (valid === false) {
       const wasAuthenticated = authenticated || rosterLoaded;
       clearSessionState({
         clearPlan: clearPlanOnLogout,
@@ -351,8 +363,18 @@ const synchronizeSession = (clearPlanOnLogout = false) => {
       });
       return false;
     }
+    if (valid === null) {
+      if (!authenticated || !rosterLoaded) {
+        setStatus(assignmentNote, '目前無法確認登入狀態，請檢查連線後再試。', 'message-error');
+        return null;
+      }
+      return true;
+    }
     authenticated = true;
-    if (!rosterLoaded) return loadRoster();
+    if (!rosterLoaded) {
+      const loaded = await loadRoster();
+      return loaded ? true : authenticated ? null : false;
+    }
     renderAccess();
     renderSeats();
     return true;
@@ -548,7 +570,12 @@ const shuffle = (values) => {
 const randomize = async () => {
   if (!authenticated || !rosterLoaded || roster.length === 0) {
     const valid = await synchronizeSession();
+    if (valid === null) return;
     if (!valid || !rosterLoaded || roster.length === 0) {
+      if (valid && rosterLoaded && roster.length === 0) {
+        setStatus(assignmentNote, '後台尚無名單，請先匯入 CSV。', 'message-error');
+        return;
+      }
       openLogin('roster');
       return;
     }
@@ -613,9 +640,14 @@ renderSeats();
 void synchronizeSession();
 
 $('#roster-login').addEventListener('click', async () => {
-  if (await checkSession()) {
+  const sessionState = await checkSession();
+  if (sessionState === true) {
     authenticated = true;
     await loadRoster();
+    return;
+  }
+  if (sessionState === null) {
+    setStatus(assignmentNote, '目前無法確認登入狀態，請檢查連線後再試。', 'message-error');
     return;
   }
   openLogin('roster');

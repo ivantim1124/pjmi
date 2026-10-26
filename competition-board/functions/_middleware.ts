@@ -124,12 +124,18 @@ const applySecurityHeaders = (
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isSeatingPage = pathname === "/seating" || pathname.startsWith("/seating/");
+  const isSeatingScript = pathname === "/seating.js";
   const isApi = pathname === "/api" || pathname.startsWith("/api/");
   const isPublicRead = request.method === "GET" && pathname === "/api/competitions";
   if (isAdminPage || isSeatingPage || (isApi && !isPublicRead)) {
     headers.set("cache-control", "no-store, max-age=0");
     headers.set("pragma", "no-cache");
     headers.set("x-robots-tag", "noindex, nofollow, noarchive");
+  }
+  if (isSeatingScript) {
+    headers.set("cache-control", "no-store, max-age=0, must-revalidate");
+    headers.set("cloudflare-cdn-cache-control", "no-store");
+    headers.set("pragma", "no-cache");
   }
   if (isApi) headers.set("x-robots-tag", "noindex, nofollow, noarchive");
 

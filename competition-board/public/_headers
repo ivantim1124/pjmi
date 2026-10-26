@@ -24,7 +24,8 @@
   X-Robots-Tag: noindex, nofollow, noarchive
 
 /seating.js
-  Cache-Control: no-store, max-age=0
+  Cache-Control: no-store, max-age=0, must-revalidate
+  Cloudflare-CDN-Cache-Control: no-store
   Pragma: no-cache
 
 /_astro/*

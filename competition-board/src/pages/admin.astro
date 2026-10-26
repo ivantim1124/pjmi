@@ -302,7 +302,10 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
     const synchronizeSession = () => {
       if (sessionSyncPromise) return sessionSyncPromise;
       sessionSyncPromise = (async () => {
-        const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+        const response = await fetch('/api/auth/session', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error('Session check failed');
         const result = await response.json() as { authenticated?: boolean };
         if (result.authenticated) {
@@ -322,30 +325,24 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
       return sessionSyncPromise;
     };
 
+    const reportSessionCheckFailure = () => {
+      const dashboardVisible = !shell?.classList.contains('is-hidden');
+      if (dashboardVisible) {
+        setMessage('目前無法確認登入狀態，保留目前畫面；請檢查連線後再試。', 'message-error');
+      } else {
+        setLoginMessage('目前無法確認登入狀態，請檢查連線後再試。', 'message-error');
+      }
+    };
+
     const refreshSessionWhenVisible = () => {
-      if (document.visibilityState === 'visible') void synchronizeSession().catch(() => {
-        competitions = [];
-        render();
-        showLogin();
-        setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
-      });
+      if (document.visibilityState === 'visible') void synchronizeSession().catch(reportSessionCheckFailure);
     };
     authChannel?.addEventListener('message', () => {
-      void synchronizeSession().catch(() => {
-        competitions = [];
-        render();
-        showLogin();
-        setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
-      });
+      void synchronizeSession().catch(reportSessionCheckFailure);
     });
     window.addEventListener('focus', refreshSessionWhenVisible);
     window.addEventListener('pageshow', refreshSessionWhenVisible);
     document.addEventListener('visibilitychange', refreshSessionWhenVisible);
-    void synchronizeSession().catch(() => {
-      competitions = [];
-      render();
-      showLogin();
-      setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
-    });
+    void synchronizeSession().catch(reportSessionCheckFailure);
   </script>
 </BoardLayout>
