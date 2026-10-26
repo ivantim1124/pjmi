@@ -15,6 +15,8 @@ a:focus-visible, summary:focus-visible, button:focus-visible { outline: 2px soli
 .home-minimal__link:hover { background: var(--color-blue); color: var(--color-dark-ink); transform: translateY(-3px); }
 .home-minimal__link--blue { background: var(--color-blue); color: var(--color-dark-ink); }
 .home-minimal__link--blue:hover { background: var(--color-cyan); }
+.home-minimal__link--lime { background: var(--color-lime); color: var(--color-dark-ink); }
+.home-minimal__link--lime:hover { background: var(--color-cyan); }
 
 
 .site-header { position: relative; z-index: 10; padding-block: 1rem; }

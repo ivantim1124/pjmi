@@ -8,6 +8,7 @@ export type D1Query = {
 
 export type D1Database = {
   prepare: (query: string) => D1Query;
+  batch?: (statements: D1Query[]) => Promise<unknown[]>;
 };
 
 export type PageContext = {
@@ -238,17 +239,20 @@ export const requireSameOrigin = (request: Request) => {
   return null;
 };
 
-export const readJsonObject = async (request: Request) => {
+export const readJsonObject = async (
+  request: Request,
+  maxBytes = maxJsonBytes,
+) => {
   const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
   if (!contentType.startsWith("application/json"))
     throw new Error("JSON content type required");
 
   const declaredLength = Number(request.headers.get("content-length") ?? 0);
-  if (Number.isFinite(declaredLength) && declaredLength > maxJsonBytes)
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes)
     throw new Error("Request body is too large");
 
   const raw = await request.text();
-  if (encoder.encode(raw).byteLength > maxJsonBytes)
+  if (encoder.encode(raw).byteLength > maxBytes)
     throw new Error("Request body is too large");
   const value = JSON.parse(raw) as unknown;
   if (!value || typeof value !== "object" || Array.isArray(value))

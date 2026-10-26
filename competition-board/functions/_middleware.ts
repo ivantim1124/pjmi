@@ -25,6 +25,8 @@ const apiMethods = new Map<string, readonly string[]>([
   ["/api/auth/session", ["GET"]],
   ["/api/admin/competitions", ["GET", "POST"]],
   ["/api/admin/google-sheets", ["GET", "POST"]],
+  ["/api/admin/seating/roster", ["GET", "PUT"]],
+  ["/api/admin/seating/labels", ["POST"]],
 ]);
 
 const getAllowedApiMethods = (pathname: string) => {
@@ -121,9 +123,10 @@ const applySecurityHeaders = (
   headers.set("x-permitted-cross-domain-policies", "none");
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isSeatingPage = pathname === "/seating" || pathname.startsWith("/seating/");
   const isApi = pathname === "/api" || pathname.startsWith("/api/");
   const isPublicRead = request.method === "GET" && pathname === "/api/competitions";
-  if (isAdminPage || (isApi && !isPublicRead)) {
+  if (isAdminPage || isSeatingPage || (isApi && !isPublicRead)) {
     headers.set("cache-control", "no-store, max-age=0");
     headers.set("pragma", "no-cache");
     headers.set("x-robots-tag", "noindex, nofollow, noarchive");
@@ -164,6 +167,18 @@ export const onRequest = async (context: MiddlewareContext) => {
           request,
           pathname,
         );
+    }
+
+    if (
+      url.hostname === "seating.pjmi.dpdns.org" &&
+      ["GET", "HEAD"].includes(request.method.toUpperCase()) &&
+      pathname === "/"
+    ) {
+      return applySecurityHeaders(
+        Response.redirect(new URL("/seating/", url), 302),
+        request,
+        "/seating/",
+      );
     }
 
     if (pathname === "/api" || pathname.startsWith("/api/")) {

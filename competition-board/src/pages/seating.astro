@@ -1,0 +1,124 @@
+---
+import BoardLayout from '../layouts/BoardLayout.astro';
+---
+
+<BoardLayout
+  title="座位安排／PJMI 鎮高機研"
+  description="匯入班級名單、隨機安排座位，並列印座位名條。"
+  noindex
+>
+  <section class="seating-hero">
+    <div>
+      <p class="eyebrow">CLASSROOM / SEAT PLANNER</p>
+      <h1>座位安排<span>，一次排好。</span></h1>
+      <p class="seating-lede">先匯入座號與姓名，再指定座位或隨機分配。調整完成後可列印座位表，前方講台方向會清楚標示。</p>
+    </div>
+    <div class="seating-hero-stamp" aria-hidden="true"><span>SEAT PLAN</span><strong>6×6</strong><span>PLAN / 01</span></div>
+  </section>
+
+  <div class="seating-shell">
+    <section class="seating-panel roster-panel" aria-labelledby="roster-title">
+      <div class="seating-panel-heading">
+        <div>
+          <p class="eyebrow">01 / ROSTER</p>
+          <h2 id="roster-title">班級名單</h2>
+        </div>
+        <span class="roster-count" id="roster-count">尚未載入</span>
+      </div>
+
+      <div id="roster-locked" class="roster-locked">
+        <p>名單存在 Cloudflare 後台。登入後才能匯入 CSV、查看姓名與安排座位。</p>
+        <button class="board-button board-button--dark" id="roster-login" type="button">管理者登入 <span aria-hidden="true">→</span></button>
+      </div>
+
+      <div id="roster-content" class="is-hidden">
+        <div class="roster-import-row">
+          <label class="file-picker" for="roster-file">選擇 CSV 檔<input id="roster-file" type="file" accept=".csv,text/csv,text/tab-separated-values" /></label>
+          <a class="text-button" href="/seating-roster-template.csv" download>下載 CSV 範本</a>
+        </div>
+        <p class="csv-format"><strong>標準格式：</strong><code>座號,姓名</code><br />也可匯入含「班級、座號、學號、姓名」欄位的表格；系統只保留座號與姓名，其他欄位會在瀏覽器端丟棄。支援 UTF-8 與 Big5 CSV。</p>
+        <div id="csv-preview" class="csv-preview is-hidden" aria-live="polite"></div>
+        <div class="roster-actions">
+          <button class="board-button board-button--primary" id="import-roster" type="button" disabled>匯入並取代名單</button>
+          <button class="text-button" id="roster-logout" type="button">登出</button>
+          <span id="roster-message" class="inline-message" role="status"></span>
+        </div>
+        <div class="roster-table-wrap">
+          <table class="roster-table">
+            <thead><tr><th scope="col">座號</th><th scope="col">姓名</th></tr></thead>
+            <tbody id="roster-list"><tr><td colspan="2">登入後載入名單</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="seating-panel planner-panel" aria-labelledby="planner-title">
+      <div class="seating-panel-heading planner-heading">
+        <div>
+          <p class="eyebrow">02 / ARRANGEMENT</p>
+          <h2 id="planner-title">座位表</h2>
+        </div>
+        <span class="arrangement-count" id="arrangement-count">0 / 36 位</span>
+      </div>
+
+      <div class="planner-toolbar">
+        <form id="layout-form" class="layout-form">
+          <label>排數<input id="row-count" type="number" min="1" max="20" value="6" inputmode="numeric" /></label>
+          <span class="dimension-times" aria-hidden="true">×</span>
+          <label>每排座位<input id="column-count" type="number" min="1" max="12" value="6" inputmode="numeric" /></label>
+          <button class="board-button board-button--quiet" type="submit">更新尺寸</button>
+        </form>
+        <div class="layout-presets" aria-label="常用座位表尺寸">
+          <button type="button" data-layout="6x6">6 × 6</button>
+          <button type="button" data-layout="5x7">5 × 7</button>
+          <button type="button" data-layout="8x8">8 × 8</button>
+        </div>
+      </div>
+
+      <div class="planner-actions">
+        <button class="board-button board-button--dark" id="randomize-seats" type="button" disabled>隨機安排 <span aria-hidden="true">⤨</span></button>
+        <button class="board-button board-button--quiet" id="clear-seats" type="button">清空座位</button>
+        <button class="board-button board-button--quiet" id="print-chart" type="button" disabled>完成並列印座位表 <span aria-hidden="true">↗</span></button>
+        <button class="board-button board-button--primary" id="get-labels" type="button" disabled>取得名條 <span aria-hidden="true">↗</span></button>
+      </div>
+      <p class="assignment-note" id="assignment-note" role="status">先登入並匯入名單，再點選座位指定座號。</p>
+
+      <div class="stage-marker"><span>FRONT / 前方</span><strong>講台</strong></div>
+      <div class="seat-grid-viewport" aria-label="座位表，可左右滑動查看">
+        <div class="seat-grid seat-grid--cols-6" id="seat-grid" aria-live="polite"></div>
+      </div>
+
+      <section class="seat-editor" aria-labelledby="seat-editor-title">
+        <div class="seat-editor-heading">
+          <div><p class="eyebrow">ADJUST / SWAP</p><h3 id="seat-editor-title">調整座位</h3></div>
+          <span id="selected-seat-label">尚未選擇座位</span>
+        </div>
+        <div class="seat-editor-fields">
+          <label for="seat-student">指定座號</label>
+          <select id="seat-student" disabled><option value="">請先登入並選擇座位</option></select>
+          <p id="seat-student-name" class="seat-student-name">點擊座位後選擇座號，姓名會自動帶入。</p>
+          <button class="text-button text-button--danger" id="clear-seat" type="button" disabled>清除此座位</button>
+        </div>
+      </section>
+
+      <p class="privacy-note"><span aria-hidden="true">⌑</span> 座位安排只保存在目前瀏覽器。名條由伺服器驗證管理密碼後產生，不留存列印內容。</p>
+    </section>
+  </div>
+
+  <dialog id="password-dialog" class="password-dialog" aria-labelledby="password-title">
+    <form id="password-form">
+      <p class="eyebrow">PASSWORD / VERIFY</p>
+      <h2 id="password-title">管理者登入</h2>
+      <p id="password-description">輸入管理密碼以載入受保護的班級名單。</p>
+      <label for="password-input">管理密碼</label>
+      <input id="password-input" type="password" autocomplete="current-password" maxlength="256" required />
+      <p id="password-message" class="inline-message" role="status"></p>
+      <div class="dialog-actions">
+        <button class="board-button board-button--quiet" id="cancel-password" type="button">取消</button>
+        <button class="board-button board-button--primary" type="submit">驗證密碼 <span aria-hidden="true">→</span></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/seating.js" is:inline></script>
+</BoardLayout>

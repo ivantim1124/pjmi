@@ -24,3 +24,8 @@ CREATE TABLE IF NOT EXISTS admin_login_attempts (
 );
 
 CREATE INDEX IF NOT EXISTS admin_login_attempts_updated_idx ON admin_login_attempts(updated_at);
+
+CREATE TABLE IF NOT EXISTS seating_students (
+  seat_number TEXT PRIMARY KEY,
+  name TEXT NOT NULL
+);

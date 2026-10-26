@@ -8,6 +8,7 @@ export const siteConfig = {
   githubUrl: 'https://github.com/ivantim1124/pjmi',
   competitionBoardUrl: 'https://competitions.pjmi.dpdns.org/',
   vocabularyPracticeUrl: 'https://englishword.pjmi.dpdns.org/',
+  seatingPlannerUrl: 'https://seating.pjmi.dpdns.org/',
 };
 
 export type Member = {

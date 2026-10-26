@@ -7,6 +7,7 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 ## 建議網址
 
 - 公開看板：`https://competitions.pjmi.dpdns.org/`
+- 座位安排：`https://seating.pjmi.dpdns.org/`
 - 管理介面：`https://competitions.pjmi.dpdns.org/admin/`
 
 「比賽看板」是中文顯示名稱；DNS 子網域使用 `competitions`，比較容易輸入、分享，也避免 IDN/Punycode 在不同裝置上顯示不一致。
@@ -60,6 +61,24 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 
 管理頁會顯示密碼登入畫面；只有登入成功的工作階段可以讀取、新增、編輯或刪除資料。公開看板不需要登入，也不需要 Cloudflare Zero Trust。
 
+## 座位安排
+
+座位工具使用專用子網域 `seating.pjmi.dpdns.org`，由同一個 Cloudflare Pages 專案與 `ADMIN_PASSWORD` 提供。Pages middleware 會將該子網域的根網址導向 `/seating/`；比賽看板網域的首頁維持原樣。正式開通時，在 Cloudflare Workers & Pages → `competition-board` → Custom domains 加入 `seating.pjmi.dpdns.org`，並確認 DNS CNAME 指向這個 Pages 專案提供的 `*.pages.dev` 網址。必須先把子網域綁定到 Pages 專案，再建立／確認 CNAME；只加 DNS 記錄並不足以啟用 Pages 網址。
+
+登入後可以匯入 CSV、以座號對應姓名、保留手動指定的座位後隨機填入其他座位，並調整已安排的位置。匯入名單只存到 D1 的 `seating_students` 表；座位安排只保存在當前瀏覽器，登出時會清除。名條 API 每次列印都需要重新輸入管理密碼，並只回傳由 D1 名單查出的座號與姓名，不保存列印資料。
+
+標準 CSV 範本只有兩欄：
+
+```csv
+座號,姓名
+1,王小明
+2,陳小華
+```
+
+匯入器也接受以「班級、座號、學號、姓名」為標題的 CSV，或沒有標題的 2–4 欄班級表格；後兩種格式只取座號與姓名。班級欄、六碼學號和其他欄位會在瀏覽器端丟棄，不會送到 D1。支援 UTF-8、Big5 及 Tab 分隔檔。匯入會取代現有名單；最多 200 位，座號需為 1–200 的數字且不可重複。
+
+`schema.sql` 已包含 `seating_students`。Pages Function 第一次存取時也會以 `CREATE TABLE IF NOT EXISTS` 初始化，無需額外設定 Worker secret；名條使用既有的管理登入、8 小時 HttpOnly 工作階段及登入限速。CSV 寫入採 D1 batch，若匯入失敗會保留原名單。座位表支援 1–20 排、每排 1–12 個座位，最多 200 席。
+
 ## 免費安全防護
 
 - 登入失敗 5 次後，該來源會暫停登入 30 分鐘；紀錄使用不可逆雜湊，不儲存原始 IP。
@@ -67,9 +86,9 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 - 新增、修改、刪除與登出 API 只接受同源請求，並限制 JSON 請求大小。
 - Pages middleware 與 `_headers` 會加入 CSP、防 iframe 點擊劫持、MIME 嗅探防護、權限限制與管理頁禁止快取。
 - 所有 SQL 都使用參數綁定，公開資料在寫入 HTML 前會跳脫。
-- `_routes.json` 讓 middleware 檢查全站；API 只允許實際存在的路徑與 HTTP 方法，URL 限制 4096 字元、寫入請求宣告大小限制 64 KiB，實際 JSON 仍由共用解析器限制在 16 KiB。
+- `_routes.json` 讓 middleware 檢查全站；API 只允許實際存在的路徑與 HTTP 方法，URL 限制 4096 字元、寫入請求宣告大小限制 64 KiB，一般 JSON 由共用解析器限制在 16 KiB，名單匯入上限為 48 KiB。
 - 公開比賽 API 會以固定快取鍵在 Cloudflare 邊緣快取 30 秒，避免用不同查詢字串繞過快取而反覆讀取 D1。
-- API URL 會限制在 4096 字元內；管理寫入仍需要登入、同源請求與 16 KiB JSON 上限。
+- API URL 會限制在 4096 字元內；管理寫入仍需要登入、同源請求與請求大小上限。
 - Cloudflare 免費方案預設提供 L3–L7 DDoS 防護；程式層驗證與快取負責降低 API 濫用與 D1 壓力，無法取代 Cloudflare 邊緣層的大型 DDoS 防護。
 
 Cloudflare Pages 的免費 WAF Rate Limiting 只有一條規則；若 `pjmi.dpdns.org` 是別人管理的父網域，這條 zone 規則無法由你建立，請以 Pages 內建 DDoS、快取與程式層驗證為主，詳見根目錄 [`SECURITY.md`](../SECURITY.md)。

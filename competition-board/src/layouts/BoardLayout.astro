@@ -5,11 +5,13 @@ import ViewCounter from '../../../src/components/ViewCounter.astro';
 interface Props {
   title?: string;
   description?: string;
+  noindex?: boolean;
 }
 
 const {
   title = '比賽看板／PJMI 鎮高機研',
   description = '整理 PJMI 最近的比賽、展覽與科學活動。',
+  noindex = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competitions.pjmi.dpdns.org').toString();
 ---
@@ -19,9 +21,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competition
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-src 'none'; img-src 'self' data:; media-src 'none'; object-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; worker-src 'none'; upgrade-insecure-requests" />
-    <link rel="canonical" href={canonical} />
+    {!noindex && <link rel="canonical" href={canonical} />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet" />
@@ -29,12 +32,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competition
   </head>
   <body>
     <header class="board-header">
-      <a class="board-brand" href="/" aria-label="PJMI 比賽看板首頁">
+      <a class="board-brand" href="https://competitions.pjmi.dpdns.org/" aria-label="PJMI 比賽看板首頁">
         <span class="board-brand-mark">PJMI</span>
         <span>鎮高機研／比賽看板</span>
       </a>
       <nav class="board-nav" aria-label="比賽看板導覽">
-        <a href="/">全部比賽</a>
+        <a href="https://competitions.pjmi.dpdns.org/">全部比賽</a>
+        <a href="https://seating.pjmi.dpdns.org/">座位安排</a>
         <a href="/admin/">管理介面 <span aria-hidden="true">↗</span></a>
         <a class="board-nav-home" href="https://pjmi.dpdns.org/">回到主站 <span aria-hidden="true">↗</span></a>
       </nav>
@@ -46,7 +50,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://competition
       <span>PJMI／鎮高機研</span>
       <span>MAKE THINGS MOVE</span>
       <span>比賽看板</span>
-      {!Astro.url.pathname.startsWith('/admin') && <ViewCounter />}
+      {!noindex && !Astro.url.pathname.startsWith('/admin') && <ViewCounter />}
     </footer>
   </body>
 </html>
