@@ -2,6 +2,20 @@ const $ = (selector) => document.querySelector(selector);
 const MAX_SEATS = 200;
 const UNASSIGNED_SEAT = '__unoccupied__';
 const PLAN_KEY = 'pjmi-seating-plan-v1';
+const AUTH_CHANNEL_NAME = 'pjmi-admin-auth';
+
+let authChannel = null;
+try {
+  authChannel = typeof BroadcastChannel === 'undefined'
+    ? null
+    : new BroadcastChannel(AUTH_CHANNEL_NAME);
+} catch {
+  authChannel = null;
+}
+
+const broadcastAuthChange = (action) => {
+  try { authChannel?.postMessage({ action }); } catch { /* Focus checks remain as a fallback. */ }
+};
 
 const grid = $('#seat-grid');
 const rosterCount = $('#roster-count');
@@ -43,6 +57,7 @@ let rosterLoaded = false;
 let authenticated = false;
 let pendingRoster = [];
 let loginMode = 'roster';
+let sessionSyncPromise = null;
 
 const setStatus = (element, message, kind = '') => {
   if (!element) return;
@@ -144,7 +159,7 @@ const renderSeatEditor = () => {
   seatEditorHint.classList.toggle('is-hidden', selectedIndex !== null);
   seatEditorFields.classList.toggle('is-hidden', selectedIndex === null);
   studentNumberInput.value = assignedNumber;
-  studentNumberInput.disabled = !rosterLoaded || selectedIndex === null || roster.length === 0;
+  studentNumberInput.disabled = !authenticated || !rosterLoaded || selectedIndex === null || roster.length === 0;
   if (selectedIndex === null) {
     selectedSeatLabel.textContent = '尚未選擇座位';
     studentName.textContent = '點選座位後輸入座號，姓名會自動帶入。';
@@ -159,14 +174,14 @@ const renderSeatEditor = () => {
       ? '輸入座號後，姓名會自動帶入；按 Enter 或離開欄位套用。'
       : '目前名單是空的，仍可將此座位指定為無人。';
   }
-  markUnoccupiedButton.disabled = selectedIndex === null || !rosterLoaded || isUnoccupied;
+  markUnoccupiedButton.disabled = !authenticated || selectedIndex === null || !rosterLoaded || isUnoccupied;
   markUnoccupiedButton.textContent = isUnoccupied ? '已指定無人座位' : '指定無人座位';
-  clearSelectedButton.disabled = selectedIndex === null || currentAssignment === null;
-  randomizeButton.disabled = !rosterLoaded || roster.length === 0;
+  clearSelectedButton.disabled = !authenticated || selectedIndex === null || currentAssignment === null;
+  randomizeButton.disabled = !authenticated || !rosterLoaded || roster.length === 0;
   const hasAssignedStudents = assignments.some((number) => number && number !== UNASSIGNED_SEAT && rosterByNumber().has(number));
   const hasMarkedSeats = assignments.includes(UNASSIGNED_SEAT);
-  labelsButton.disabled = !rosterLoaded || !hasAssignedStudents;
-  printChartButton.disabled = !rosterLoaded || (!hasAssignedStudents && !hasMarkedSeats);
+  labelsButton.disabled = !authenticated || !rosterLoaded || !hasAssignedStudents;
+  printChartButton.disabled = !authenticated || !rosterLoaded || (!hasAssignedStudents && !hasMarkedSeats);
 };
 
 const renderSeats = () => {
@@ -214,11 +229,37 @@ const renderSeats = () => {
 const renderAccess = () => {
   rosterLocked.classList.toggle('is-hidden', authenticated && rosterLoaded);
   rosterContent.classList.toggle('is-hidden', !authenticated || !rosterLoaded);
+  importButton.disabled = !authenticated || !rosterLoaded || pendingRoster.length === 0;
   renderRoster();
 };
 
-const selectSeat = (index) => {
-  if (!rosterLoaded) {
+const clearSessionState = ({ clearPlan = false, message = '', kind = '' } = {}) => {
+  authenticated = false;
+  rosterLoaded = false;
+  roster = [];
+  pendingRoster = [];
+  selectedIndex = null;
+  if (clearPlan) {
+    assignments = Array(rows * columns).fill(null);
+    try { localStorage.removeItem(PLAN_KEY); } catch { /* Storage is unavailable. */ }
+  }
+  renderAccess();
+  renderSeats();
+  if (message) setStatus(assignmentNote, message, kind);
+};
+
+const selectSeat = async (index) => {
+  if (!authenticated || !rosterLoaded) {
+    const valid = await synchronizeSession();
+    if (valid && rosterLoaded) {
+      selectedIndex = index;
+      renderSeats();
+      if (!studentNumberInput.disabled) {
+        studentNumberInput.focus({ preventScroll: true });
+        studentNumberInput.select();
+      }
+      return;
+    }
     setStatus(assignmentNote, '請先登入並載入名單，再指定座號。');
     openLogin('roster');
     return;
@@ -252,15 +293,12 @@ const revalidateAssignments = () => {
 const loadRoster = async () => {
   try {
     const response = await fetch('/api/admin/seating/roster', { credentials: 'same-origin' });
-    if (response.status === 401 || response.status === 403) {
-      authenticated = false;
-      rosterLoaded = false;
-      roster = [];
-      renderAccess();
-      renderSeats();
+    if (response.status === 401) {
+      clearSessionState({ message: '登入工作階段已失效，請重新登入。', kind: 'message-error' });
       return false;
     }
     const body = await response.json();
+    if (response.status === 403) throw new Error(body.error || '目前網路未通過網站安全檢查。');
     if (!response.ok) throw new Error(body.error || '目前無法讀取後台名單。');
     roster = Array.isArray(body.students)
       ? body.students.map((student) => ({
@@ -278,9 +316,10 @@ const loadRoster = async () => {
       : '後台尚無名單，請先匯入 CSV。');
     return true;
   } catch (error) {
-    authenticated = false;
+    authenticated = await checkSession();
     rosterLoaded = false;
     roster = [];
+    pendingRoster = [];
     renderAccess();
     renderSeats();
     setStatus(assignmentNote, error instanceof Error ? error.message : '讀取名單失敗。', 'message-error');
@@ -298,6 +337,41 @@ const checkSession = async () => {
     return false;
   }
 };
+
+const synchronizeSession = (clearPlanOnLogout = false) => {
+  if (sessionSyncPromise) return sessionSyncPromise;
+  sessionSyncPromise = (async () => {
+    const valid = await checkSession();
+    if (!valid) {
+      const wasAuthenticated = authenticated || rosterLoaded;
+      clearSessionState({
+        clearPlan: clearPlanOnLogout,
+        message: wasAuthenticated ? '登入狀態已變更，請重新登入。' : '',
+        kind: 'message-error',
+      });
+      return false;
+    }
+    authenticated = true;
+    if (!rosterLoaded) return loadRoster();
+    renderAccess();
+    renderSeats();
+    return true;
+  })().finally(() => {
+    sessionSyncPromise = null;
+  });
+  return sessionSyncPromise;
+};
+
+const refreshSessionWhenVisible = () => {
+  if (document.visibilityState === 'visible') void synchronizeSession();
+};
+
+authChannel?.addEventListener('message', (event) => {
+  void synchronizeSession(event.data?.action === 'logout');
+});
+window.addEventListener('focus', refreshSessionWhenVisible);
+window.addEventListener('pageshow', refreshSessionWhenVisible);
+document.addEventListener('visibilitychange', refreshSessionWhenVisible);
 
 const openLogin = (mode) => {
   loginMode = mode;
@@ -471,10 +545,13 @@ const shuffle = (values) => {
   return result;
 };
 
-const randomize = () => {
-  if (!rosterLoaded || roster.length === 0) {
-    openLogin('roster');
-    return;
+const randomize = async () => {
+  if (!authenticated || !rosterLoaded || roster.length === 0) {
+    const valid = await synchronizeSession();
+    if (!valid || !rosterLoaded || roster.length === 0) {
+      openLogin('roster');
+      return;
+    }
   }
   const placed = new Set(assignments.filter((number) => number && number !== UNASSIGNED_SEAT));
   const remaining = roster.map((student) => student.seatNumber).filter((number) => !placed.has(number));
@@ -533,10 +610,7 @@ loadPlan();
 renderAccess();
 renderSeats();
 
-checkSession().then((valid) => {
-  authenticated = valid;
-  if (valid) loadRoster();
-});
+void synchronizeSession();
 
 $('#roster-login').addEventListener('click', async () => {
   if (await checkSession()) {
@@ -549,18 +623,12 @@ $('#roster-login').addEventListener('click', async () => {
 
 $('#roster-logout').addEventListener('click', async () => {
   try {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-  } finally {
-    authenticated = false;
-    rosterLoaded = false;
-    roster = [];
-    pendingRoster = [];
-    assignments = Array(rows * columns).fill(null);
-    selectedIndex = null;
-    try { localStorage.removeItem(PLAN_KEY); } catch { /* Storage is unavailable. */ }
-    renderAccess();
-    renderSeats();
-    setStatus(assignmentNote, '已登出並清除這台瀏覽器中的座位安排。');
+    const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    if (!response.ok) throw new Error('伺服器未確認登出，座位資料仍保留；請確認網路後重試。');
+    clearSessionState({ clearPlan: true, message: '已登出並清除這台瀏覽器中的座位安排。' });
+    broadcastAuthChange('logout');
+  } catch (error) {
+    setStatus(assignmentNote, error instanceof Error ? error.message : '登出失敗，請稍後再試。', 'message-error');
   }
 });
 
@@ -610,6 +678,7 @@ passwordForm.addEventListener('submit', async (event) => {
     authenticated = true;
     passwordInput.value = '';
     passwordDialog.close();
+    broadcastAuthChange('login');
     if (mode === 'labels') {
       await createLabels(printWindow);
     } else {
@@ -668,7 +737,7 @@ importButton.addEventListener('click', async () => {
   } catch (error) {
     setStatus(rosterMessage, error instanceof Error ? error.message : 'CSV 匯入失敗。', 'message-error');
   } finally {
-    importButton.disabled = pendingRoster.length === 0;
+    importButton.disabled = !authenticated || !rosterLoaded || pendingRoster.length === 0;
   }
 });
 
@@ -685,7 +754,7 @@ document.querySelectorAll('[data-layout]').forEach((button) => {
 });
 
 const commitSeatNumber = () => {
-  if (selectedIndex === null) return;
+  if (!authenticated || !rosterLoaded || selectedIndex === null) return;
   const rawValue = studentNumberInput.value.trim();
   const previousSeatNumber = assignments[selectedIndex];
   if (!rawValue) {
@@ -737,7 +806,7 @@ studentNumberInput.addEventListener('keydown', (event) => {
 });
 
 markUnoccupiedButton.addEventListener('click', () => {
-  if (selectedIndex === null || !rosterLoaded) return;
+  if (!authenticated || selectedIndex === null || !rosterLoaded) return;
   assignments[selectedIndex] = UNASSIGNED_SEAT;
   savePlan();
   renderSeats();
@@ -745,7 +814,7 @@ markUnoccupiedButton.addEventListener('click', () => {
 });
 
 clearSelectedButton.addEventListener('click', () => {
-  if (selectedIndex === null) return;
+  if (!authenticated || selectedIndex === null) return;
   assignments[selectedIndex] = null;
   savePlan();
   renderSeats();
@@ -765,11 +834,11 @@ $('#clear-seats').addEventListener('click', () => {
 });
 
 labelsButton.addEventListener('click', () => {
-  if (!assignments.some(Boolean)) return;
+  if (!authenticated || !rosterLoaded || !assignments.some(Boolean)) return;
   openLogin('labels');
 });
 
 printChartButton.addEventListener('click', () => {
-  if (!rosterLoaded || !assignments.some(Boolean)) return;
+  if (!authenticated || !rosterLoaded || !assignments.some(Boolean)) return;
   window.print();
 });

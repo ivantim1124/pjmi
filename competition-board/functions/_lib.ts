@@ -164,6 +164,9 @@ const readCookie = (request: Request, name: string) => {
   return match?.slice(name.length + 1) ?? "";
 };
 
+export const hasAdminSessionCookie = (request: Request) =>
+  Boolean(readCookie(request, sessionCookieName));
+
 export const createSessionToken = async (secret: string) => {
   const expiresAt = String(Date.now() + sessionLifetimeSeconds * 1000);
   const nonce = encodeBase64Url(crypto.getRandomValues(new Uint8Array(18)));
@@ -218,7 +221,11 @@ export const isAdmin = async (request: Request, env: Env) => {
 
 export const requireAdmin = async (request: Request, env: Env) => {
   if (!(await isAdmin(request, env)))
-    return json({ error: "Unauthorized" }, 401);
+    return json(
+      { error: "Unauthorized" },
+      401,
+      hasAdminSessionCookie(request) ? { "set-cookie": clearSessionCookie } : {},
+    );
   return null;
 };
 

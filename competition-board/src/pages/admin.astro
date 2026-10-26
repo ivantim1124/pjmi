@@ -96,6 +96,16 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
       featured: document.querySelector<HTMLInputElement>('#featured'),
     };
     let competitions: Competition[] = [];
+    let authChannel: BroadcastChannel | null = null;
+    try {
+      authChannel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('pjmi-admin-auth');
+    } catch {
+      authChannel = null;
+    }
+    const broadcastAuthChange = (action: 'login' | 'logout') => {
+      try { authChannel?.postMessage({ action }); } catch { /* Focus checks remain as a fallback. */ }
+    };
+    let sessionSyncPromise: Promise<void> | null = null;
 
     const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
@@ -142,6 +152,8 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
       try {
         const response = await fetch('/api/admin/competitions', { credentials: 'same-origin' });
         if (response.status === 401 || response.status === 403) {
+          competitions = [];
+          render();
           showLogin();
           setLoginMessage('請輸入管理密碼。', 'message-error');
           return;
@@ -192,19 +204,27 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
         });
         if (!response.ok) {
           if (password) password.value = '';
+          const body = await response.json().catch(() => ({})) as { error?: string };
           if (response.status === 429) {
             const seconds = Number(response.headers.get('retry-after') || 1800);
             setLoginMessage(`嘗試次數過多，請約 ${Math.max(1, Math.ceil(seconds / 60))} 分鐘後再試。`, 'message-error');
+          } else if (response.status === 401) {
+            setLoginMessage('密碼錯誤，請檢查後再試。', 'message-error');
+          } else if (response.status === 403) {
+            setLoginMessage(body.error || '登入請求遭網站安全檢查拒絕，請重新載入後再試。', 'message-error');
           } else if (response.status === 503) {
-            setLoginMessage('管理登入防護尚未設定完成。', 'message-error');
+            setLoginMessage(body.error === 'Admin login protection is not configured'
+              ? '管理登入防護尚未設定完成。'
+              : '登入服務暫時無法使用，請稍後再試。', 'message-error');
           } else {
-            setLoginMessage('密碼錯誤。', 'message-error');
+            setLoginMessage(body.error || `登入服務回應異常（${response.status}），請稍後再試。`, 'message-error');
           }
           return;
         }
         if (password) password.value = '';
         setLoginMessage('');
         showDashboard();
+        broadcastAuthChange('login');
         await load();
       } catch {
         setLoginMessage('目前無法連線，請稍後再試。', 'message-error');
@@ -243,9 +263,20 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
 
     cancel?.addEventListener('click', resetForm);
     logout?.addEventListener('click', async () => {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-      showLogin();
-      setLoginMessage('已登出。', 'message-success');
+      try {
+        const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+        if (!response.ok) {
+          setMessage('伺服器未確認登出；目前登入狀態仍保留，請確認網路後重試。', 'message-error');
+          return;
+        }
+        competitions = [];
+        render();
+        showLogin();
+        setLoginMessage('已登出。', 'message-success');
+        broadcastAuthChange('logout');
+      } catch {
+        setMessage('登出請求失敗；目前登入狀態仍保留，請確認網路後重試。', 'message-error');
+      }
     });
 
     list?.addEventListener('click', async (event) => {
@@ -268,17 +299,53 @@ import SheetsConnection from '../../../src/components/SheetsConnection.astro';
       }
     });
 
-    const checkSession = async () => {
-      const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
-      const result = await response.json() as { authenticated?: boolean };
-      if (result.authenticated) {
-        showDashboard();
-        await load();
-      } else {
-        showLogin();
-      }
+    const synchronizeSession = () => {
+      if (sessionSyncPromise) return sessionSyncPromise;
+      sessionSyncPromise = (async () => {
+        const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Session check failed');
+        const result = await response.json() as { authenticated?: boolean };
+        if (result.authenticated) {
+          const needsLoad = shell?.classList.contains('is-hidden') || false;
+          showDashboard();
+          if (needsLoad) await load();
+        } else {
+          const wasVisible = !shell?.classList.contains('is-hidden');
+          competitions = [];
+          render();
+          showLogin();
+          if (wasVisible) setLoginMessage('登入狀態已變更，請重新登入。', 'message-error');
+        }
+      })().finally(() => {
+        sessionSyncPromise = null;
+      });
+      return sessionSyncPromise;
     };
 
-    checkSession().catch(() => showLogin());
+    const refreshSessionWhenVisible = () => {
+      if (document.visibilityState === 'visible') void synchronizeSession().catch(() => {
+        competitions = [];
+        render();
+        showLogin();
+        setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
+      });
+    };
+    authChannel?.addEventListener('message', () => {
+      void synchronizeSession().catch(() => {
+        competitions = [];
+        render();
+        showLogin();
+        setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
+      });
+    });
+    window.addEventListener('focus', refreshSessionWhenVisible);
+    window.addEventListener('pageshow', refreshSessionWhenVisible);
+    document.addEventListener('visibilitychange', refreshSessionWhenVisible);
+    void synchronizeSession().catch(() => {
+      competitions = [];
+      render();
+      showLogin();
+      setLoginMessage('目前無法確認登入狀態，請重新載入後再試。', 'message-error');
+    });
   </script>
 </BoardLayout>
