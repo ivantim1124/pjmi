@@ -13,20 +13,10 @@
   Pragma: no-cache
   X-Robots-Tag: noindex, nofollow, noarchive
 
-/seating/*
-  Cache-Control: no-store, max-age=0
-  Pragma: no-cache
-  X-Robots-Tag: noindex, nofollow, noarchive
-
 /api/*
   Cache-Control: no-store, max-age=0
   Pragma: no-cache
   X-Robots-Tag: noindex, nofollow, noarchive
-
-/seating.js
-  Cache-Control: no-store, max-age=0, must-revalidate
-  Cloudflare-CDN-Cache-Control: no-store
-  Pragma: no-cache
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

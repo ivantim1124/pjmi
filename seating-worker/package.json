@@ -1,0 +1,18 @@
+{
+  "name": "pjmi-seating-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "astro build && node scripts/embed-assets.mjs",
+    "deploy:preview": "npm run build && wrangler deploy --config wrangler-preview.toml",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "astro": "7.2.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "wrangler": "4.153.0"
+  }
+}

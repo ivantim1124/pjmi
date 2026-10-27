@@ -1,0 +1,19 @@
+name = "pjmi-seating"
+main = "src/worker.ts"
+compatibility_date = "2026-10-27"
+workers_dev = true
+routes = [{ pattern = "seating.pjmi.dpdns.org", custom_domain = true }]
+secrets = { required = ["ADMIN_PASSWORD", "ADMIN_SESSION_SECRET"] }
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+run_worker_first = ["/", "/index.html", "/seating.js", "/seating", "/seating/*", "/api/*"]
+
+[vars]
+BLOCK_NON_TW_SITE = "1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pjmi-seating"
+database_id = "45614bd6-07d4-4d92-9f29-99989a1ffa57"

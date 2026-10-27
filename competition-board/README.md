@@ -7,7 +7,6 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 ## 建議網址
 
 - 公開看板：`https://competitions.pjmi.dpdns.org/`
-- 座位安排：`https://seating.pjmi.dpdns.org/`
 - 管理介面：`https://competitions.pjmi.dpdns.org/admin/`
 
 「比賽看板」是中文顯示名稱；DNS 子網域使用 `competitions`，比較容易輸入、分享，也避免 IDN/Punycode 在不同裝置上顯示不一致。
@@ -63,21 +62,7 @@ Google 試算表的管理者連線檢查入口已預備；正式環境狀態請�
 
 ## 座位安排
 
-座位工具使用專用子網域 `seating.pjmi.dpdns.org`，由同一個 Cloudflare Pages 專案與 `ADMIN_PASSWORD` 提供。Pages middleware 會將該子網域的根網址導向 `/seating/`；比賽看板網域的首頁維持原樣。正式開通時，在 Cloudflare Workers & Pages → `competition-board` → Custom domains 加入 `seating.pjmi.dpdns.org`，並確認 DNS CNAME 指向這個 Pages 專案提供的 `*.pages.dev` 網址。必須先把子網域綁定到 Pages 專案，再建立／確認 CNAME；只加 DNS 記錄並不足以啟用 Pages 網址。
-
-登入後可以匯入 CSV、點選座位直接輸入座號並自動帶入姓名，也可以指定無人座位；隨機安排會保留手動指定並略過無人座位。匯入名單只存到 D1 的 `seating_students` 表；座位安排只保存在當前瀏覽器，登出時會清除。名條 API 每次列印都需要重新輸入管理密碼，並只回傳由 D1 名單查出的座號與姓名，不保存列印資料。
-
-標準 CSV 範本只有兩欄：
-
-```csv
-座號,姓名
-1,王小明
-2,陳小華
-```
-
-匯入器也接受以「班級、座號、學號、姓名」為標題的 CSV，或沒有標題的 2–4 欄班級表格；後兩種格式只取座號與姓名。班級欄、六碼學號和其他欄位會在瀏覽器端丟棄，不會送到 D1。支援 UTF-8、Big5 及 Tab 分隔檔。匯入會取代現有名單；最多 200 位，座號需為 1–200 的數字且不可重複。
-
-`schema.sql` 已包含 `seating_students`。Pages Function 第一次存取時也會以 `CREATE TABLE IF NOT EXISTS` 初始化，無需額外設定 Worker secret；名條使用既有的管理登入、8 小時 HttpOnly 工作階段及登入限速。CSV 寫入採 D1 batch，若匯入失敗會保留原名單。座位表支援 1–20 排、每排 1–12 個座位，最多 200 席。
+座位安排已移至獨立 Cloudflare Worker 專案 [`../seating-worker`](../seating-worker/README.md)，不再由這個比賽看板 Pages 專案提供頁面、導覽或 API。PJMI 主站仍保留「座位安排」快速連結。
 
 ## 免費安全防護
 

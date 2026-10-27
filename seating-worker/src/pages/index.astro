@@ -1,21 +1,12 @@
 ---
-import BoardLayout from '../layouts/BoardLayout.astro';
+import SeatingLayout from '../layouts/SeatingLayout.astro';
+import '../styles/seating.css';
 ---
 
-<BoardLayout
-  title="座位安排／PJMI 鎮高機研"
+<SeatingLayout
+  title="座位安排"
   description="匯入班級名單、隨機安排座位，並列印座位名條。"
-  noindex
 >
-  <section class="seating-hero">
-    <div>
-      <p class="eyebrow">CLASSROOM / SEAT PLANNER</p>
-      <h1>座位安排<span>，一次排好。</span></h1>
-      <p class="seating-lede">先匯入座號與姓名，再指定座位或隨機分配。調整完成後可列印座位表，前方講台方向會清楚標示。</p>
-    </div>
-    <div class="seating-hero-stamp" aria-hidden="true"><span>SEAT PLAN</span><strong>6×6</strong><span>PLAN / 01</span></div>
-  </section>
-
   <div class="seating-shell">
     <section class="seating-panel roster-panel" aria-labelledby="roster-title">
       <div class="seating-panel-heading">
@@ -128,5 +119,5 @@ import BoardLayout from '../layouts/BoardLayout.astro';
     </form>
   </dialog>
 
-  <script src="/seating.js?v=session-state-20261026-2" is:inline></script>
-</BoardLayout>
+  <script src="/seating.js?v=20261027-standalone-1" is:inline></script>
+</SeatingLayout>
