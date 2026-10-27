@@ -21,6 +21,15 @@ export default {
       const country = request.cf?.country;
       if (env.BLOCK_NON_TW_SITE === '1' && typeof country === 'string' && country.toUpperCase() !== 'TW') return blockedResponse(request, 'COUNTRY_NOT_SUPPORTED');
       const url = new URL(request.url);
+      if (url.hostname === 'competitions.pjmi.dpdns.org' && /^\/seating(?:\/|$)/.test(url.pathname)) {
+        return secureResponse(new Response(request.method === 'HEAD' ? null : 'Not found', {
+          status: 404,
+          headers: {
+            'cache-control': 'no-store, no-cache, max-age=0, must-revalidate',
+            'x-robots-tag': 'noindex, nofollow, noarchive',
+          },
+        }));
+      }
       if (url.pathname === '/api/integrations/google-sheets' && url.hostname !== 'englishword.pjmi.dpdns.org') {
         if (request.method !== 'GET') return secureResponse(new Response('Method not allowed', { status: 405, headers: { allow: 'GET', 'cache-control': 'no-store' } }));
         // Status only: never reveals the deployment URL, secret or sheet ID.
